@@ -29,6 +29,8 @@ class InnerProductLayer : public Layer<Ftype, Btype> {
   virtual inline int ExactNumBottomBlobs() const { return 1; }
   virtual inline int ExactNumTopBlobs() const { return 1; }
 
+  virtual void SetSparseMode(SparseMode mode);
+
  protected:
   virtual void Forward_cpu(const vector<Blob*>& bottom,
       const vector<Blob*>& top);

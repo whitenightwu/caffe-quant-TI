@@ -165,6 +165,8 @@ class Solver {
     }
   }
 
+  void SetSparseMode();
+  
   const SolverParameter param_;
   const Type data_type_;
   int iter_;
