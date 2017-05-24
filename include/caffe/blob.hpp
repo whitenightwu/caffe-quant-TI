@@ -450,7 +450,7 @@ class Blob {
   template<typename Dtype>
   void ToProtoBVLC(BlobProto* proto, bool write_diff = false) const;
 
-  void FromProto(const BlobProto& proto, bool reshape = true);
+  void FromProto(const BlobProto& proto, bool reshape = true, bool ignore_shape_mismatch = false);
   bool ShapeEquals(const BlobProto& other);
   std::string to_string(int indent = 0) const;  // debug helper
 

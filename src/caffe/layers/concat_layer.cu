@@ -48,6 +48,8 @@ void ConcatLayer<Ftype, Btype>::Forward_gpu(const vector<Blob*>& bottom,
     offset_concat_axis += bottom_concat_axis;
   }
   CUDA_CHECK(cudaStreamSynchronize(Caffe::thread_stream()));
+
+  this->Quantize_gpu(bottom, top);
 }
 
 template <typename Ftype, typename Btype>
