@@ -242,7 +242,7 @@ DataReader::CursorManager::CursorManager(shared_ptr<db::DB> db, DataReader* read
       rec_end_(0UL),
       cache_(cache),
       shuffle_(shuffle),
-      cached_all_(false) {}
+      cached_all_(false), epoch_(0) {}
 
 DataReader::CursorManager::~CursorManager() {
   cursor_.reset();
@@ -283,7 +283,7 @@ void DataReader::CursorManager::next(shared_ptr<Datum>& datum) {
         reader_->just_cached();
         break;  // we cache first epoch, then we just read it from cache
       }
-      LOG_IF(INFO, solver_rank_ == 0 && parser_thread_id_ == 0) << "Restarting data pre-fetching";
+      LOG_IF(INFO, solver_rank_ == 0 && parser_thread_id_ == 0) << "Starting prefetch of epoch " << ++epoch_;
       cursor_->SeekToFirst();
     }
   }
