@@ -9,7 +9,6 @@
 
 #include <string>
 #include <vector>
-#include <mutex>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -45,10 +44,6 @@ class DataTransformer {
   unsigned int Rand(int n) const {
     CHECK_GT(n, 0);
     return Rand() % n;
-  }
-
-  bool HasRand() {
-    return rng_!=NULL;
   }
 
 #ifndef CPU_ONLY
