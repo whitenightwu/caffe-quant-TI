@@ -9,6 +9,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include "caffe/blob.hpp"
 #include "caffe/common.hpp"
@@ -44,6 +45,10 @@ class DataTransformer {
   unsigned int Rand(int n) const {
     CHECK_GT(n, 0);
     return Rand() % n;
+  }
+
+  bool HasRand() {
+    return rng_!=NULL;
   }
 
 #ifndef CPU_ONLY
@@ -278,6 +283,15 @@ class DataTransformer {
 #ifndef CPU_ONLY
   GPUMemory::Workspace mean_values_gpu_;
 #endif
+
+#ifdef USE_OPENCV
+  cv::Mat varsz_orig_img_;
+  cv::Mat varsz_rand_resize_img_;
+  cv::Mat varsz_rand_crop_img_;
+  cv::Mat varsz_center_crop_img_;
+#endif
+
+  std::mutex mtx_;
 };
 
 }  // namespace caffe
