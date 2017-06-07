@@ -437,6 +437,10 @@ void Solver::Reduce(int device, Caffe::Brew mode, uint64_t random_seed,
 }
 
 bool Solver::Solve(const char* resume_file) {
+  callback_soft_barrier();
+  
+  this->SetSparseMode();
+    
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();
   // Initialize to false every time we start solving.
