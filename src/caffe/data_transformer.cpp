@@ -1095,7 +1095,7 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(const cv::Mat& cv_img, bool u
 #endif  // USE_OPENCV
 
 template<typename Dtype>
-void DataTransformer<Dtype>::InitRand(int seed) {
+void DataTransformer<Dtype>::InitRand(unsigned int rand_seed) {
   const bool needs_rand = param_.mirror() || (phase_ == TRAIN && param_.crop_size());
   if (needs_rand) {
     // Use random_seed setting for deterministic transformations
