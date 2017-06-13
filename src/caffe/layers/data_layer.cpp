@@ -12,7 +12,6 @@ DataLayer<Ftype, Btype>::DataLayer(const LayerParameter& param)
     shuffle_(param.data_param().shuffle()) {
   sample_only_.store(this->auto_mode_ && this->phase_ == TRAIN);
   init_offsets();
-  this->rand_seed_ = this->layer_param_.data_param().rand_seed();  
 }
 
 template<typename Ftype, typename Btype>
