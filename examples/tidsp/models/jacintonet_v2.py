@@ -1,9 +1,9 @@
 from __future__ import print_function
 import caffe
-from caffe.model_libs import *
+from models.model_libs import *
 
 def jacintonet11(net, from_layer=None, use_batchnorm=True, use_relu=True, num_output=1000, total_stride=32, freeze_layers=[]):  
-   in_place = False #Top and Bottom blobs must be different for NVCaffe BN caffe-0.15
+   in_place = True #Top and Bottom blobs must be different for NVCaffe BN caffe-0.15, but can be in-place in caffe-0.16
    
    stride_value = 2 
    cur_total_stride = 1
@@ -109,7 +109,7 @@ def jacintonet11(net, from_layer=None, use_batchnorm=True, use_relu=True, num_ou
    
    
 def jsegnet21(net, from_layer=None, use_batchnorm=True, use_relu=True, num_output=20, total_stride=16, freeze_layers=[]): 
-   in_place = False #Top and Bottom blobs must be different for NVCaffe BN caffe-0.15
+   in_place = True #Top and Bottom blobs must be different for NVCaffe BN caffe-0.15, but can be in-place in caffe-0.16
    	 
    stride_value = 2 
    cur_total_stride = 1
