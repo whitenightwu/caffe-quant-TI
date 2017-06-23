@@ -523,7 +523,7 @@ DEFINE_AND_INSTANTIATE_GPU_UNARY_FUNC(eltwise_multi, y[index] = y[index]*x[index
 
 DEFINE_AND_INSTANTIATE_GPU_1NARY_FUNC(set, x[index] = value, value )
 
-DEFINE_AND_INSTANTIATE_GPU_X2NARY_FUNC(zerout, y[index] = y[index]*x[index], threshold )
+DEFINE_AND_INSTANTIATE_GPU_X2NARY_FUNC(zerout, y[index] = ((x[index] <= Dtype(threshold) && x[index] >= Dtype(-threshold)) ? Dtype(0) : x[index]), threshold )
 
 template <typename Dtype>
 struct CheckZeroFunctor {

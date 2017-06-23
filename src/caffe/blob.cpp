@@ -135,33 +135,90 @@ void Blob::ShareDiff(const Blob& other) {
   CHECK(is_current_diff_valid());
 }
 
+void Blob::ComputeSparseDiff() {
+  if(sparse_mode_ == SPARSE_NONE || connectivity_ == NULL) {
+    return;
+  }
+
+  convert_diff(data_type());  // align data&diff types
+  shared_ptr<SyncedMemory>& data_mem = data_tensor_->mutable_synced_mem();
+  const shared_ptr<SyncedMemory>& diff_mem = diff_tensor_->synced_mem();
+  const shared_ptr<SyncedMemory>& connectivity_mem = connectivity_->synced_mem();
+
+  // We will perform update based on where the data is located.
+  switch (data_mem->head()) {
+  case SyncedMemory::HEAD_AT_CPU:
+    // perform computation on CPU
+    cpu_eltwise_multi(count_, data_type(),
+          connectivity_mem->cpu_data(), diff_mem->mutable_cpu_data() );
+    break;
+  case SyncedMemory::HEAD_AT_GPU:
+  case SyncedMemory::SYNCED:
+#ifndef CPU_ONLY
+    gpu_eltwise_multi(count_, data_type(),
+          connectivity_mem->gpu_data(), diff_mem->mutable_gpu_data() );
+#else
+    NO_GPU;
+#endif
+    break;
+    default:
+    LOG(FATAL) << "Syncedmem not initialized.";
+  }
+  CHECK(is_current_data_valid());
+  CHECK(is_current_diff_valid());
+}
+
+void Blob::ComputeSparseData() {
+  if(sparse_mode_ == SPARSE_NONE || connectivity_ == NULL) {
+    return;
+  }
+
+  shared_ptr<SyncedMemory>& data_mem = data_tensor_->mutable_synced_mem();
+  const shared_ptr<SyncedMemory>& connectivity_mem = connectivity_->synced_mem();
+
+  // We will perform update based on where the data is located.
+  switch (data_mem->head()) {
+  case SyncedMemory::HEAD_AT_CPU:
+    // perform computation on CPU
+    cpu_eltwise_multi(count_, data_type(),
+          connectivity_mem->cpu_data(), data_mem->mutable_cpu_data() );
+    break;
+  case SyncedMemory::HEAD_AT_GPU:
+  case SyncedMemory::SYNCED:
+#ifndef CPU_ONLY
+    gpu_eltwise_multi(count_, data_type(),
+          connectivity_mem->gpu_data(), data_mem->mutable_gpu_data() );
+#else
+    NO_GPU;
+#endif
+    break;
+    default:
+    LOG(FATAL) << "Syncedmem not initialized.";
+  }
+  CHECK(is_current_data_valid());
+}
+
 // The "update" method is used for parameter blobs in a Net, which are stored
 // as TBlob<float> or TBlob<double> -- hence we do not define it for
 // TBlob<int> or TBlob<unsigned int>.
 void Blob::Update() {
   convert_diff(data_type());  // align data&diff types
+
+  this->ComputeSparseDiff();
+
   shared_ptr<SyncedMemory>& data_mem = data_tensor_->mutable_synced_mem();
   const shared_ptr<SyncedMemory>& diff_mem = diff_tensor_->synced_mem();
-  const shared_ptr<SyncedMemory>& connectivity_mem = connectivity_->synced_mem();
   
   // We will perform update based on where the data is located.
   switch (data_mem->head()) {
   case SyncedMemory::HEAD_AT_CPU:
     // perform computation on CPU
-    if(sparse_mode_ != SPARSE_NONE && connectivity_!=NULL) {
-      cpu_eltwise_multi(count_, data_type(),
-	  		connectivity_mem->cpu_data(), diff_mem->mutable_cpu_data() );	  
-    }
     cpu_axpy(count_, data_type(), -1.F,
         diff_mem->cpu_data(), data_mem->mutable_cpu_data());
     break;
   case SyncedMemory::HEAD_AT_GPU:
   case SyncedMemory::SYNCED:
 #ifndef CPU_ONLY
-    if(sparse_mode_ != SPARSE_NONE && connectivity_!=NULL) {
-      gpu_eltwise_multi(count_, data_type(),
-	  		connectivity_mem->gpu_data(), diff_mem->mutable_gpu_data() );
-    }
     gpu_axpy(count_, data_type(), -1.F,
         diff_mem->gpu_data(), data_mem->mutable_gpu_data());
 #else
@@ -897,13 +954,14 @@ void Blob::gpu_set(int count, Type dtype, void* X, float val) {
 
 
 void Blob::initialize_connectivity(float val) {
+    shared_ptr<SyncedMemory>& data_mem = data_tensor_->mutable_synced_mem();
     const shared_ptr<SyncedMemory>& connectivity_mem = connectivity_->synced_mem();
 	if (!connectivity_mem) {
 		return;
 	}
 
 	// We will perform update based on where the data is located.
-	switch (connectivity_mem->head()) {
+	switch (data_mem->head()) {
 	case SyncedMemory::HEAD_AT_CPU:
 	{
 		// perform computation on CPU

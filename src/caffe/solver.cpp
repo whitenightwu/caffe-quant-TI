@@ -28,7 +28,8 @@ SolverAction::Enum Solver::GetRequestedAction() {
 Solver::Solver(const SolverParameter& param, size_t rank, const Solver* root_solver)
     : param_(param), data_type_(param_.solver_data_type()), iter_(0), id_(0), net_(),
       callback_(nullptr), root_solver_(root_solver), rank_(rank), requested_early_exit_(false),
-      iteration_timer_(), test_timer_(), iterations_last_(0), iterations_restored_(0) {
+      iteration_timer_(), test_timer_(), iterations_last_(0), iterations_restored_(0),
+      iterations_sized_(0), iter_size_complete_(false), sparsity_factor_(0) {
   Init();
 }
 
@@ -56,6 +57,7 @@ void Solver::Init() {
   iter_ = 0;
   total_lapse_ = 0.F;
   current_step_ = 0;
+  sparsity_factor_ = param_.sparsity_start_factor();
 }
 
 void Solver::InitTrainNet() {
@@ -433,6 +435,42 @@ void Solver::Reduce(int device, Caffe::Brew mode, uint64_t random_seed,
   Caffe::set_solver_count(solver_count);
   Caffe::set_root_solver(root_solver);
   net_->ReduceAndUpdate();
+}
+
+void Solver::ThresholdNet() {
+  //induce incremental sparsity
+  if (Caffe::root_solver()) {
+    if(param_.sparsity_target() > 0.0 && sparsity_factor_ < param_.sparsity_target()) {
+      if((iter_ % param_.sparsity_step_iter())==0 && iter_ >= param_.sparsity_start_iter()) {
+        sparsity_factor_ += param_.sparsity_step_factor();
+        float threshold_fraction_low = sparsity_factor_/2;
+        float threshold_fraction_mid = sparsity_factor_;
+        float threshold_fraction_high = sparsity_factor_;
+        float threshold_value_maxratio = 0.2;
+        float threshold_value_max = 0.2;
+        float threshold_step_factor = 1e-6;
+
+        LOG(INFO) << "Finding and applying thresholds. Target sparsity = " << sparsity_factor_;
+        net_->FindAndApplyThresholdNet(threshold_fraction_low, threshold_fraction_mid, threshold_fraction_high,
+            threshold_value_maxratio, threshold_value_max, threshold_step_factor, false);
+
+        this->SetSparseMode();
+
+        //LOG(INFO) << "Sparsity after threshold:";
+        //this->DisplaySparsity();
+      }
+    }
+
+    if(param_.sparse_mode() != SPARSE_NONE) {
+      net_->ApplySparseModeConnectivity();
+    }
+  }
+}
+
+void Solver::DisplaySparsity() {
+  LOG(INFO) << "sparsity_target=" << param_.sparsity_target()
+      << " sparsity_factor=" << sparsity_factor_ << " iter=" << iter_;
+  net_->DisplaySparsity();
 }
 
 bool Solver::Solve(const char* resume_file) {

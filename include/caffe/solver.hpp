@@ -166,10 +166,14 @@ class Solver {
     }
   }
 
+public:
   void StartQuantization(shared_ptr<Net >& net);
   void FinishQuantization(shared_ptr<Net >& net);
   void SetSparseMode();
+  void ThresholdNet();
+  void DisplaySparsity();
   
+protected:
   const SolverParameter param_;
   const Type data_type_;
   int iter_;
@@ -204,6 +208,8 @@ class Solver {
   Timer test_timer_;
   int iterations_last_;
   int iterations_restored_;
+
+  float sparsity_factor_;
 
   DISABLE_COPY_MOVE_AND_ASSIGN(Solver);
 };

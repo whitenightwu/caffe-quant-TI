@@ -874,6 +874,7 @@ void Net::ReduceAndUpdate() {
       id_from = id_to = -1;
       au_ids.clear();
 #endif
+      solver_->ThresholdNet();
       solver_->iteration_complete_signal();
     }
   }
@@ -2076,10 +2077,10 @@ int Net::GetIntegerLengthOut(const int layer_id, bool unsigned_check_out,
 		  EstimateAbsBits(max_val_abs) : (EstimateAbsBits(max_val_abs) + 1);
 }
 
-void Net::ThresholdNet(float threshold_fraction_low, float threshold_fraction_mid, float threshold_fraction_high,
-    float threshold_value_maxratio, float threshold_value_max, float threshold_step_factor) {
+void Net::FindAndApplyThresholdNet(float threshold_fraction_low, float threshold_fraction_mid, float threshold_fraction_high,
+    float threshold_value_maxratio, float threshold_value_max, float threshold_step_factor, bool verbose) {
 
-  for (int i = 0; i < (layers_.size()-1); i++) {
+  for (int i = 0; i < layers_.size(); i++) {
     if (layers_[i]->type() == std::string("Convolution")) {
       LayerBase& conv_layer = *layers_[i];
       Blob& conv_weights = *conv_layer.blobs()[0];
@@ -2089,7 +2090,9 @@ void Net::ThresholdNet(float threshold_fraction_low, float threshold_fraction_mi
 	  int no = (conv_weights.num_axes() == 1)? conv_weights.count() : conv_weights.shape(0);
 	  int ni = ((conv_weights.num_axes() == 1)? conv_weights.count() : conv_weights.shape(1))*num_group;
 	  float count = conv_weights.count();
-	  LOG(WARNING) << layers_[i]->layer_param().name() << " ni=" << ni << " no=" << no;
+      if(verbose) {
+	    LOG(WARNING) << layers_[i]->layer_param().name() << " ni=" << ni << " no=" << no;
+      }
 
 	  if(ni>=32 || no >= 32) {
 	    float threshold_fraction_selected = ((ni>=256 && no >= 512)? threshold_fraction_high :
@@ -2101,39 +2104,67 @@ void Net::ThresholdNet(float threshold_fraction_low, float threshold_fraction_mi
 	    float step_size = max_abs_value * threshold_step_factor;
 	    float max_threshold_value = std::min<float>(threshold_value_max, max_abs_value*threshold_value_maxratio);
 
-	    //LOG(WARNING) << layers_[i]->layer_param().name() << " MaxAbsWeight=" << max_abs_value;
-	    //LOG(WARNING) << layers_[i]->layer_param().name() << " max_threshold_value=" << max_threshold_value;
-	    //LOG(WARNING) << layers_[i]->layer_param().name() << " step_size=" << step_size;
+	    float step_sizeX = step_size*100;
+	    float selected_thresholdX = 0;
+        for(float step=0; step<max_abs_value && step<max_threshold_value; step+=step_sizeX) {
+          float zcount = conv_weights.count_zero((float)step);
+          float zratio = zcount / count;
+          if(zratio <= threshold_fraction_selected) {
+            selected_thresholdX = step;
+          } else {
+            break;
+          }
+        }
 
-	    for(float step=0; step<max_abs_value && step<max_threshold_value; step+=step_size) {
+	    for(float step=std::max((selected_thresholdX-step_sizeX),0.0f);
+	        step<(selected_thresholdX+step_sizeX) && step<max_abs_value && step<max_threshold_value;
+	        step+=step_size) {
 	      float zcount = conv_weights.count_zero((float)step);
 	      float zratio = zcount / count;
-	      //LOG(WARNING) << layers_[i]->layer_param().name() << " Threshold=" << step << " ZeroPercentage=" << zratio*100;
 	      if(zratio <= threshold_fraction_selected) {
 	        selected_threshold = step;
 	      } else {
 	        break;
 	      }
-	    }	
+	    }
+
         conv_weights.zerout(selected_threshold);
-        float zcount = conv_weights.count_zero(selected_threshold);
-        LOG(WARNING) << layers_[i]->layer_param().name() << " MaxAbsWeight=" << max_abs_value
-            << " MaxThreshold=" << max_threshold_value << " SelectedThreshold=" << selected_threshold
-            << " ZeroPercentage=" << (zcount*100/count);
+
+        if(verbose) {
+          float zcount = conv_weights.count_zero(0.0);
+          LOG(WARNING) << layers_[i]->layer_param().name() << " MaxAbsWeight=" << max_abs_value
+              << " MaxThreshold=" << max_threshold_value << " SelectedThreshold=" << selected_threshold
+              << " ZeroPercentage=" << (zcount*100/count);
+        }
       }
     }
   }
-
-  this->DisplaySparsity();
 }
+
+/**
+ * ApplySparseModeConnectivity
+ * Yet another way to do this is to store the threshold for each layer in FindAndApplyThresholdNet
+ * And just use it here. But the current implementation of this cuntion is more generic
+ * since it can be used when thresholding is completely outside.
+ */
+void Net::ApplySparseModeConnectivity() {
+  for (int i = 0; i < layers_.size(); i++) {
+    if (layers_[i]->type() == std::string("Convolution")) {
+      LayerBase& conv_layer = *layers_[i];
+      Blob& conv_weights = *conv_layer.blobs()[0];
+
+      //Use the connectivity information in the blob and zerout values accordingly.
+      conv_weights.ComputeSparseData();
+    }
+  }
+}
+
 
 void Net::DisplaySparsity() {
   std::map<std::string, std::pair<int,int> > spasity_map;
   int blob_count = this->GetSparsity(spasity_map);
-  LOG(INFO) << "Num Params(" << blob_count << "), ";
+  LOG(INFO) << "Num Params(" << blob_count << "), " << "Sparsity (zero_weights/count): ";
   float total_zero_count = 0, total_count = 0;
-  std::stringstream ss;
-  ss << "Convolution and InnerProduct Layers, Sparsity (zero_weights/count): ";
   for(std::map<std::string, std::pair<int,int> >::iterator
       iter = spasity_map.begin(); iter != spasity_map.end(); iter++) {
     std::string param_name = iter->first;
@@ -2141,16 +2172,14 @@ void Net::DisplaySparsity() {
     float count = iter->second.second;
     total_zero_count += zero_count;
     total_count += count;
-    ss << param_name << "(" << std::setprecision(3) << (zero_count/count) << ") ";
-    //ss << param_name << "(" << zero_count << "/" << count << ") ";
+    LOG(INFO) << param_name << "(" << std::setprecision(3) << (zero_count/count) << ") ";
   }
-  LOG(INFO) << ss.str();
-  LOG(INFO) << "Total Sparsity (zero_weights/count) = "
-      << " (" << total_zero_count << "/" << total_count << ") "
+  LOG(INFO) << "Total Sparsity (zero_weights/count) = " << " (" << total_zero_count << "/" << total_count << ") "
       << std::setprecision(3) << (total_zero_count/total_count);
 }
 
 void Net::SetSparseMode(SparseMode mode) {
+  LOG(INFO) << "All zero weights of convolution layers are frozen";
   for(int layer_id=0; layer_id<layers_.size(); layer_id++) {
     layers_[layer_id]->SetSparseMode(mode);
   }

@@ -534,7 +534,6 @@ class Blob {
 
   //For sparse operation
   inline const shared_ptr<Tensor>& connectivity() const {
-    CHECK(connectivity_);
     return connectivity_;
   }
   
@@ -571,6 +570,8 @@ class Blob {
 #ifndef CPU_ONLY
   void gpu_set(int count, Type dtype, void* X, float val);
 #endif
+  void ComputeSparseDiff();
+  void ComputeSparseData();
   void initialize_connectivity(float val = 1.0);
   	  
   void cpu_zerout(int count, Type dtype, const void* X, void* Y, float threshold);

@@ -354,6 +354,12 @@ message SolverParameter {
 
   optional int32 display_quantization = 60 [default = 2000];
   optional bool insert_quantization_param = 61 [default = false];
+  
+  optional float sparsity_target = 62 [default = 0.0]; //desired sparsity as a fraction
+  optional float sparsity_step_factor = 63 [default = 0.01];  //sprsity step factor. 0.01 is 1%
+  optional int32 sparsity_step_iter = 64 [default = 1000];  //sprsity step increment iterations
+  optional int32 sparsity_start_iter = 65 [default = 0];  //sprsity start iteration  
+  optional float sparsity_start_factor = 66 [default = 0.0];  //sprsity start factor
 }
 
 // A message that stores the solver snapshots
