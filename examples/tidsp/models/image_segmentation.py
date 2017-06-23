@@ -35,6 +35,7 @@ def main():
     #Names
     config_param.config_name = 'image_classification'
     config_param.model_name = "jacintonet11"
+    config_param.dataset = "nodataset"       
     config_param.pretrain_model = None
                           
     ### Modify the following parameters accordingly ###
@@ -57,7 +58,8 @@ def main():
     # Select betwen list based ImageData or lmdb
     config_param.use_image_list = True
     
-    config_param.total_stride = 16
+    config_param.stride_list = [2,2,2,2,1]
+    config_param.dilation_list = [1,1,1,1,2]
 	
 	#mean_value is used in a bias layer in the net.
     config_param.mean_value = 128    
@@ -118,7 +120,7 @@ def main():
     config_param.deploy_net_file = "{}/deploy.prototxt".format(config_param.save_dir)
     config_param.solver_file = "{}/solver.prototxt".format(config_param.save_dir)
     # snapshot prefix.
-    config_param.snapshot_prefix = "{}/{}".format(config_param.snapshot_dir, config_param.model_name)
+    config_param.snapshot_prefix = "{}/{}_{}".format(config_param.snapshot_dir, config_param.model_name, config_param.dataset)
     # job script path.
     config_param.job_file_base = "{}/{}".format(config_param.job_dir, 'train')
     config_param.log_file = "{}.log".format(config_param.job_file_base)    
@@ -240,7 +242,7 @@ def main():
         out_layer = 'data/bias'           
         if config_param.model_name == 'jsegnet21':		
             out_layer = models.jacintonet_v2.jsegnet21(net, from_layer=out_layer,\
-            num_output=config_param.num_output,total_stride=config_param.total_stride,\
+            num_output=config_param.num_output,stride_list=config_param.stride_list,dilation_list=config_param.dilation_list,\
             freeze_layers=config_param.freeze_layers)
         else:
             ValueError("Invalid model name")
