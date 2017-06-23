@@ -27,7 +27,7 @@ void DataTransformer<Dtype>::TransformGPU(const TBlob<Dtype>* input_blob, TBlob<
   const vector<int> input_shape = input_blob->shape();
 
   TransformGPU(input_shape[0], input_shape[1], input_shape[2], input_shape[3], sizeof(Dtype), input_blob->gpu_data(),
-      transformed_blob->mutable_gpu_data(false), randoms, use_mean);
+      transformed_blob->mutable_gpu_data(), randoms, use_mean);
 }
 #endif
 
