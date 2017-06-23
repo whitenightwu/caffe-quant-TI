@@ -649,7 +649,6 @@ message TransformationParameter {
   // False if omitted when Forward Type is float/double.
   // True otherwise (float16 doesn't work well on CPU).
   optional bool use_gpu_transform = 8 [default = false];
-
   // If non-negative, the seed with which the transformer's
   // random number generator would be initialized -- useful for reproducible results.
   // Otherwise, (and by default) initialize using a seed derived from the system clock.
@@ -991,13 +990,10 @@ message DataParameter {
   // Takes effect only when used together with 'threads' setting.
   // Ignored and always set to 1 for test nets.
   optional uint32 parser_threads  = 12 [default = 0];
-<<<<<<< HEAD
   // Cache observations while reading
   optional bool cache = 13 [default = false];
   // Shuffle observations while reading for better accuracy. Ignored if 'cache' is false.
   optional bool shuffle = 14 [default = false];
-=======
->>>>>>> preparing to merge from drnikolaev/caffe
 }
 
 message DropoutParameter {

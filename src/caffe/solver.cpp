@@ -382,7 +382,6 @@ void Solver::Step(int iters) {
       PrintRate();
       iterations_last_ = iter_;
     }
-
     // Increment the internal iter_ counter -- its value should always indicate
     // the number of times the weights have been updated.
     ++iter_;

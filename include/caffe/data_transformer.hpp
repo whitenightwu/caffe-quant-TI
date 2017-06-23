@@ -224,6 +224,7 @@ class DataTransformer {
   void Transform(TBlob<Dtype>* input_blob, TBlob<Dtype>* transformed_blob);
 
   
+
   /**
    * @brief Infers the shape of transformed_blob will have when
    *    the transformation is applied to the data.

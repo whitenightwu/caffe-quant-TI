@@ -33,7 +33,6 @@ class DataReader : public InternalThread {
     const size_t parser_threads_, parser_thread_id_;
     const size_t rank_cycle_, full_cycle_;
     size_t rec_id_, rec_end_;
-
     bool cache_, shuffle_;
     bool cached_all_;
 
