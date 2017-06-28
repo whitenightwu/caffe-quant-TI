@@ -13,9 +13,12 @@ Care has to be taken to strike the right balance between quality and speedup. We
 
 * Please see the [installation instructions](INSTALL.md) for installing the dependencies and building the code. 
 
-### Features
+### Training procedure
+After cloning and building this source code, please visit [tidsp/caffe-jacinto-models](https://github.com/tidsp/caffe-jacinto-models) to do the training.
 
-New layers and options have been added to support sparsity and quantization. A brief explanation is given in this section, but more details can be found by [clicking here](FEATURES.md).
+### Additional Information (can be skipped)
+
+New layers and options have been added to support sparsity and quantization. A brief explanation is given in this section, but more details can be found by [clicking here](FEATURES.md). 
 
 Note that Caffe-jacinto does not directly support any embedded/low-power device. But the models trained by it can be used for fast inference on such a device due to the sparsity and quantization.
 
@@ -33,15 +36,6 @@ Note that Caffe-jacinto does not directly support any embedded/low-power device.
 
 ###### Absorbing Batch Normalization into convolution weights
 * A tool is provided to absorb batch norm values into convolution weights. This may help to speedup inference. This will also help if Batch Norm layers are not supported in an embedded implementation.
-
-### Examples
-###### Semantic segmentation:
-* Note that ImageNet training (see below) is recommended before doing this segmentation training to create the pre-trained weights. The segmentation training will read the ImageNet trained caffemodel for doing the fine tuning on segmentation. However it is possible to directly do segmentation training without ImageNet training, but the quality might be inferior.
-* [Train sparse, quantized CNN for semantic segmentation](examples/tidsp/docs/Cityscapes_Segmentation_README.md) on the cityscapes dataset. Inference script is also provided to test out the final model.
-
-###### Classification:
-* [Training on ILSVRC ImageNet dataset](examples/tidsp/docs/Imagenet_Classification_README.md). The 1000 class ImageNet trained weights is useful for fine tuning other tasks.
-* [Train sparse, quantized CNN on cifar10 dataset](examples/tidsp/docs/Cifar10_Classification_README.md) for classification. Note that this is just a toy example and no inference script is provided to test the final model.
 
 <br>
 The following sections are kept as it is from the original Caffe.
