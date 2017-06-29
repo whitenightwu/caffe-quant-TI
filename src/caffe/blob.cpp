@@ -136,7 +136,7 @@ void Blob::ShareDiff(const Blob& other) {
 }
 
 void Blob::ComputeSparseDiff() {
-  if(sparse_mode_ == SPARSE_NONE || connectivity_ == NULL) {
+  if(connectivity_ == NULL) {
     return;
   }
 
@@ -169,7 +169,7 @@ void Blob::ComputeSparseDiff() {
 }
 
 void Blob::ComputeSparseData() {
-  if(sparse_mode_ == SPARSE_NONE || connectivity_ == NULL) {
+  if(connectivity_ == NULL) {
     return;
   }
 
@@ -826,40 +826,35 @@ void Blob::gpu_if_nonzero(int count, Type dtype, const void* X, void* Y) const {
 
 void Blob::StoreSparseModeConnectivity(const SparseMode mode) {
     CHECK(mode != SPARSE_NONE);
+	
+	InitializeConnectivity();
+	
     const shared_ptr<SyncedMemory>& data_mem = data_tensor_->synced_mem();
 	if (!data_mem) {
 		return;
 	}
 		
-    if(!connectivity_) {
-      connectivity_ = make_shared<Tensor>(data_type());
-    }
-    connectivity_->Reshape(count_); 
-	initialize_connectivity();  
     shared_ptr<SyncedMemory>& connectivity_mem = connectivity_->mutable_synced_mem();
 
-	if(mode == SPARSE_UPDATE){
-	    switch (data_mem->head()) {
-	    case SyncedMemory::HEAD_AT_CPU:
-		{
-		    cpu_if_nonzero(count_, data_type(), data_mem->cpu_data(), connectivity_mem->mutable_cpu_data());
-		    break;
-		}
-	    case SyncedMemory::HEAD_AT_GPU:
-	    case SyncedMemory::SYNCED:
-		{
-#ifndef CPU_ONLY
-		    gpu_if_nonzero(count_, data_type(), data_mem->cpu_data(), connectivity_mem->mutable_gpu_data());
-#else
-		    NO_GPU;
-#endif
-		    break;
-		}
-		default:
-			  LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
-		 }
+	switch (data_mem->head()) {
+	case SyncedMemory::HEAD_AT_CPU:
+	{
+	  cpu_if_nonzero(count_, data_type(), data_mem->cpu_data(), connectivity_mem->mutable_cpu_data());
+	  break;
 	}
-	sparse_mode_ = mode;
+	case SyncedMemory::HEAD_AT_GPU:
+	case SyncedMemory::SYNCED:
+	{
+#ifndef CPU_ONLY
+      gpu_if_nonzero(count_, data_type(), data_mem->cpu_data(), connectivity_mem->mutable_gpu_data());
+#else
+      NO_GPU;
+#endif
+      break;
+    }
+	default:
+	  LOG(FATAL) << "Unknown caffe mode: " << Caffe::mode();
+	}
 }
 
 int Blob::cpu_count_zero(int count, Type dtype, const void* X, float threshold) const {
@@ -953,7 +948,12 @@ void Blob::gpu_set(int count, Type dtype, void* X, float val) {
 #endif
 
 
-void Blob::initialize_connectivity(float val) {
+void Blob::InitializeConnectivity(float val) {
+    if(!connectivity_) {
+      connectivity_ = make_shared<Tensor>(data_type());
+    }
+    connectivity_->Reshape(count_); 
+	
     shared_ptr<SyncedMemory>& data_mem = data_tensor_->mutable_synced_mem();
     const shared_ptr<SyncedMemory>& connectivity_mem = connectivity_->synced_mem();
 	if (!connectivity_mem) {

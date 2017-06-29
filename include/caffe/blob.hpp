@@ -51,8 +51,7 @@ class Blob {
   Blob(Type data_type, Type diff_type)
       : data_tensor_(make_shared<Tensor>(data_type)),
         diff_tensor_(make_shared<Tensor>(diff_type)),
-        count_(0), last_data_type_(data_type), last_diff_type_(diff_type),
-		sparse_mode_(SPARSE_NONE) {}
+        count_(0), last_data_type_(data_type), last_diff_type_(diff_type) {}
   explicit Blob(Type dtype)
       : Blob(dtype, dtype) {}
 
@@ -570,7 +569,7 @@ class Blob {
   void gpu_set(int count, Type dtype, void* X, float val);
 #endif
 
-  void initialize_connectivity(float val = 1.0);
+  void InitializeConnectivity(float val = 1.0);
   void ComputeSparseDiff();
   void ComputeSparseData();
   void StoreSparseModeConnectivity(const SparseMode mode);
@@ -592,7 +591,6 @@ class Blob {
 
   //For sparse operation  
   mutable shared_ptr<Tensor> connectivity_;
-  SparseMode sparse_mode_;
   
   bool is_current_data_valid() const {
     return data_tensor_->is_current_valid();
