@@ -53,8 +53,10 @@ void ImageLabelDataLayer<Ftype, Btype>::LayerSetUp(const vector<Blob*>& bottom,
   data_param.mutable_data_param()->set_source(this->layer_param_.image_label_data_param().image_list_path());
   data_param.mutable_data_param()->set_batch_size(this->layer_param_.image_label_data_param().batch_size());
   data_param.mutable_data_param()->set_backend(static_cast<DataParameter_DB>(this->layer_param_.image_label_data_param().backend()));
-  data_param.mutable_data_param()->set_threads(threads);
-  data_param.mutable_data_param()->set_parser_threads(threads);
+  if(has_threads) {
+    data_param.mutable_data_param()->set_threads(threads);
+    data_param.mutable_data_param()->set_parser_threads(threads);
+  }
   
   LayerParameter label_param(this->layer_param_);
   label_param.mutable_transform_param()->set_crop_size(this->layer_param_.transform_param().crop_size());
@@ -69,8 +71,10 @@ void ImageLabelDataLayer<Ftype, Btype>::LayerSetUp(const vector<Blob*>& bottom,
   label_param.mutable_data_param()->set_source(this->layer_param_.image_label_data_param().label_list_path());
   label_param.mutable_data_param()->set_batch_size(this->layer_param_.image_label_data_param().batch_size());
   label_param.mutable_data_param()->set_backend(static_cast<DataParameter_DB>(this->layer_param_.image_label_data_param().backend()));
-  label_param.mutable_data_param()->set_threads(threads);
-  label_param.mutable_data_param()->set_parser_threads(threads);
+  if(has_threads) {
+    label_param.mutable_data_param()->set_threads(threads);
+    label_param.mutable_data_param()->set_parser_threads(threads);
+  }
   
   //Create the internal layers
   data_layer_.reset(new DataLayer<Ftype, Btype>(data_param));
