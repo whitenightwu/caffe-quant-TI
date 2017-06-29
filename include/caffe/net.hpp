@@ -322,11 +322,10 @@ class Net {
   template <typename Dtype> void OptimizeNet();
   void FindAndApplyThresholdNet(float threshold_fraction_low, float threshold_fraction_mid, float threshold_fraction_high,
       float threshold_value_maxratio, float threshold_value, float threshold_step_factor, bool verbose = true);
-  void ApplySparseModeConnectivity();
-  void DisplaySparsity();
-  	 	    
+  void ApplySparseModeConnectivity();  
   void StoreSparseModeConnectivity(SparseMode mode);
-      
+  void DisplaySparsity();
+  
  protected:
   // Helpers for Init.
   /// @brief Append a new top blob to the net.

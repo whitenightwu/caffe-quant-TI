@@ -564,16 +564,17 @@ class Blob {
 #ifndef CPU_ONLY
   void gpu_if_nonzero(int count, Type dtype, const void* X, void* Y) const;
 #endif  
-  void StoreSparseModeConnectivity(const SparseMode mode);
   		
   void cpu_set(int count, Type dtype, void* X, float val);
 #ifndef CPU_ONLY
   void gpu_set(int count, Type dtype, void* X, float val);
 #endif
+
+  void initialize_connectivity(float val = 1.0);
   void ComputeSparseDiff();
   void ComputeSparseData();
-  void initialize_connectivity(float val = 1.0);
-  	  
+  void StoreSparseModeConnectivity(const SparseMode mode);
+  
   void cpu_zerout(int count, Type dtype, const void* X, void* Y, float threshold);
 #ifndef CPU_ONLY
   void gpu_zerout(int count, Type dtype, const void* X, void* Y, float threshold);

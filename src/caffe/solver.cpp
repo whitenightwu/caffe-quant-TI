@@ -225,11 +225,6 @@ void Solver::FinishQuantization(shared_ptr<Net>& net) {
   }
 }
 
-void Solver::StoreSparseModeConnectivity() {
-  if (param_.sparse_mode() != caffe::SPARSE_NONE) {
-    net_->StoreSparseModeConnectivity(param_.sparse_mode());
-  }
-}
 
 void Solver::Step(int iters) {
   const int start_iter = iter_;
@@ -464,6 +459,12 @@ void Solver::ThresholdNet() {
     if(param_.sparse_mode() != SPARSE_NONE) {
       net_->ApplySparseModeConnectivity();
     }
+  }
+}
+
+void Solver::StoreSparseModeConnectivity() {
+  if (param_.sparse_mode() != caffe::SPARSE_NONE) {
+    net_->StoreSparseModeConnectivity(param_.sparse_mode());
   }
 }
 
