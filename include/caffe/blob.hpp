@@ -564,7 +564,7 @@ class Blob {
 #ifndef CPU_ONLY
   void gpu_if_nonzero(int count, Type dtype, const void* X, void* Y) const;
 #endif  
-  void SetSparseMode(const SparseMode mode);
+  void StoreSparseModeConnectivity(const SparseMode mode);
   		
   void cpu_set(int count, Type dtype, void* X, float val);
 #ifndef CPU_ONLY

@@ -824,7 +824,7 @@ void Blob::gpu_if_nonzero(int count, Type dtype, const void* X, void* Y) const {
 }
 #endif
 
-void Blob::SetSparseMode(const SparseMode mode) {
+void Blob::StoreSparseModeConnectivity(const SparseMode mode) {
     CHECK(mode != SPARSE_NONE);
     const shared_ptr<SyncedMemory>& data_mem = data_tensor_->synced_mem();
 	if (!data_mem) {

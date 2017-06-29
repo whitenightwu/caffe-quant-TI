@@ -225,9 +225,9 @@ void Solver::FinishQuantization(shared_ptr<Net>& net) {
   }
 }
 
-void Solver::SetSparseMode() {
+void Solver::StoreSparseModeConnectivity() {
   if (param_.sparse_mode() != caffe::SPARSE_NONE) {
-    net_->SetSparseMode(param_.sparse_mode());
+    net_->StoreSparseModeConnectivity(param_.sparse_mode());
   }
 }
 
@@ -454,7 +454,7 @@ void Solver::ThresholdNet() {
         net_->FindAndApplyThresholdNet(threshold_fraction_low, threshold_fraction_mid, threshold_fraction_high,
             threshold_value_maxratio, threshold_value_max, threshold_step_factor, false);
 
-        this->SetSparseMode();
+        this->StoreSparseModeConnectivity();
 
         //LOG(INFO) << "Sparsity after threshold:";
         //this->DisplaySparsity();
@@ -476,7 +476,7 @@ void Solver::DisplaySparsity() {
 bool Solver::Solve(const char* resume_file) {
   callback_soft_barrier();
   
-  this->SetSparseMode();
+  this->StoreSparseModeConnectivity();
     
   LOG(INFO) << "Solving " << net_->name();
   LOG(INFO) << "Learning Rate Policy: " << param_.lr_policy();

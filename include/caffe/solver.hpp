@@ -169,7 +169,7 @@ class Solver {
 public:
   void StartQuantization(shared_ptr<Net >& net);
   void FinishQuantization(shared_ptr<Net >& net);
-  void SetSparseMode();
+  void StoreSparseModeConnectivity();
   void ThresholdNet();
   void DisplaySparsity();
   

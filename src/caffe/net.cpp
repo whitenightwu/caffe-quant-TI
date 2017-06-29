@@ -2159,6 +2159,20 @@ void Net::ApplySparseModeConnectivity() {
   }
 }
 
+void Net::StoreSparseModeConnectivity(SparseMode mode) {
+  LOG(INFO) << "All zero weights of convolution layers are frozen";
+  if(mode != SPARSE_NONE) {
+    for(int i=0; i<layers_.size(); i++) {
+      if(layers_[i]->type() == std::string("Convolution")) {
+        LayerBase& conv_layer = *layers_[i];
+        Blob& conv_weights = *conv_layer.blobs()[0];
+
+        //Store the non-zero weight information
+        conv_weights.StoreSparseModeConnectivity(mode);
+      }
+    }
+  }
+}
 
 void Net::DisplaySparsity() {
   std::map<std::string, std::pair<int,int> > spasity_map;
@@ -2176,13 +2190,6 @@ void Net::DisplaySparsity() {
   }
   LOG(INFO) << "Total Sparsity (zero_weights/count) = " << " (" << total_zero_count << "/" << total_count << ") "
       << std::setprecision(3) << (total_zero_count/total_count);
-}
-
-void Net::SetSparseMode(SparseMode mode) {
-  LOG(INFO) << "All zero weights of convolution layers are frozen";
-  for(int layer_id=0; layer_id<layers_.size(); layer_id++) {
-    layers_[layer_id]->SetSparseMode(mode);
-  }
 }
 
 template void Net::Convert2FixedPoint_cpu(float* data, const int cnt, const int bw, int fl, bool unsigned_data, bool clip) const;

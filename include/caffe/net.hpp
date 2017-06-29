@@ -325,7 +325,7 @@ class Net {
   void ApplySparseModeConnectivity();
   void DisplaySparsity();
   	 	    
-  void SetSparseMode(SparseMode mode);
+  void StoreSparseModeConnectivity(SparseMode mode);
       
  protected:
   // Helpers for Init.
