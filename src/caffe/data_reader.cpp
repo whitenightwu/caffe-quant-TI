@@ -283,7 +283,10 @@ void DataReader::CursorManager::next(shared_ptr<Datum>& datum) {
         reader_->just_cached();
         break;  // we cache first epoch, then we just read it from cache
       }
-      LOG_IF(INFO, solver_rank_ == 0 && parser_thread_id_ == 0) << "Starting prefetch of epoch " << ++epoch_;
+      //LOG_IF(INFO, solver_rank_ == 0 && parser_thread_id_ == 0) << "Restarting data pre-fetching";
+      if(solver_rank_ == 0 && parser_thread_id_ == 0) {
+        LOG_EVERY_N(INFO,10) << "Starting prefetch of epoch " << ++epoch_;
+      }
       cursor_->SeekToFirst();
     }
   }
