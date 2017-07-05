@@ -1165,7 +1165,7 @@ int Net::GetSparsity(std::map<std::string, std::pair<int,int> >& sparsity_map){
 		    const int net_param_id = param_id_vecs_[layer_id][param_id];
 		    const string& blob_name = param_display_names_[net_param_id];
 		    //const Dtype data_abs_val_mean = blob.asum_data() / blob.count();
-		    std::pair<int,int> sp_map = std::make_pair(blob.count_zero(threshold), blob.count());
+		    std::pair<int,int> sp_map = std::make_pair(blob.count_zero(threshold, 0, 0), blob.count());
 		    sparsity_map[layer_names_[layer_id] + "_param_" + blob_name] = sp_map;
 			blob_count++;
 		  }	
@@ -1784,8 +1784,8 @@ void Net::UpdateQuantizationRangeInLayers() {
   for (int layer_id = 0; layer_id < layers_.size(); layer_id++) {
 	if(bottom_vecs_[layer_id].size()>0) {
 		for(int blob_id = 0; blob_id<bottom_vecs_[layer_id].size(); blob_id++) {
-		    float min_in = bottom_vecs_[layer_id][blob_id]->min();
-		    float max_in = bottom_vecs_[layer_id][blob_id]->max();
+		    float min_in = bottom_vecs_[layer_id][blob_id]->min(0, 0);
+		    float max_in = bottom_vecs_[layer_id][blob_id]->max(0, 0);
             min_in_[layer_id][blob_id] = min_in_[layer_id][blob_id] * alpha +  min_in * beta;
             max_in_[layer_id][blob_id] = max_in_[layer_id][blob_id] * alpha +  max_in * beta;
 		}
@@ -1795,8 +1795,8 @@ void Net::UpdateQuantizationRangeInLayers() {
 	float max_out = std::numeric_limits<float>::min();
 	if(top_vecs_[layer_id].size() > 0) {
 		for(int blob_id = 0; blob_id<top_vecs_[layer_id].size(); blob_id++) {
-          min_out = std::min(min_out, top_vecs_[layer_id][blob_id]->min());
-		  max_out = std::max(min_out, top_vecs_[layer_id][blob_id]->max());
+          min_out = std::min(min_out, top_vecs_[layer_id][blob_id]->min(0, 0));
+		  max_out = std::max(min_out, top_vecs_[layer_id][blob_id]->max(0, 0));
 		}
         min_out_[layer_id] = min_out_[layer_id] * alpha + min_out * beta;
 		max_out_[layer_id] = max_out_[layer_id] * alpha + max_out * beta;
@@ -1809,8 +1809,8 @@ void Net::UpdateQuantizationRangeInLayers() {
 	float max_weights = std::numeric_limits<float>::min();
 	if(num_params > 0) {
 		for(int blob_id = 0; blob_id < num_params; blob_id++) {
-          min_weights = std::min(min_weights, (float)layers_[layer_id]->blobs()[blob_id]->min());
-		  max_weights = std::max(max_weights, (float)layers_[layer_id]->blobs()[blob_id]->max());
+          min_weights = std::min(min_weights, (float)layers_[layer_id]->blobs()[blob_id]->min(0, 0));
+		  max_weights = std::max(max_weights, (float)layers_[layer_id]->blobs()[blob_id]->max(0, 0));
 		}
         min_weights_[layer_id] = min_weights_[layer_id] * alpha + min_weights * beta;
 		max_weights_[layer_id] = max_weights_[layer_id] * alpha + max_weights * beta;
@@ -2098,8 +2098,8 @@ void Net::FindAndApplyThresholdNet(float threshold_fraction_low, float threshold
 	    float threshold_fraction_selected = ((ni>=256 && no >= 512)? threshold_fraction_high :
 	        ((ni>=32 && no >= 32)? threshold_fraction_mid: threshold_fraction_low));
 	    float selected_threshold = 0;
-	    float max_abs = std::abs(conv_weights.max());
-	    float min_abs = std::abs(conv_weights.min());
+	    float max_abs = std::abs(conv_weights.max(0, 0));
+	    float min_abs = std::abs(conv_weights.min(0, 0));
 	    float max_abs_value = std::max<float>(max_abs, min_abs);
 	    float step_size = max_abs_value * threshold_step_factor;
 	    float max_threshold_value = std::min<float>(threshold_value_max, max_abs_value*threshold_value_maxratio);
@@ -2107,7 +2107,7 @@ void Net::FindAndApplyThresholdNet(float threshold_fraction_low, float threshold
 	    float step_sizeX = step_size*100;
 	    float selected_thresholdX = 0;
         for(float step=0; step<max_abs_value && step<max_threshold_value; step+=step_sizeX) {
-          float zcount = conv_weights.count_zero((float)step);
+          float zcount = conv_weights.count_zero((float)step, 0, 0);
           float zratio = zcount / count;
           if(zratio <= threshold_fraction_selected) {
             selected_thresholdX = step;
@@ -2119,7 +2119,7 @@ void Net::FindAndApplyThresholdNet(float threshold_fraction_low, float threshold
 	    for(float step=std::max((selected_thresholdX-step_sizeX),0.0f);
 	        step<(selected_thresholdX+step_sizeX) && step<max_abs_value && step<max_threshold_value;
 	        step+=step_size) {
-	      float zcount = conv_weights.count_zero((float)step);
+	      float zcount = conv_weights.count_zero((float)step, 0, 0);
 	      float zratio = zcount / count;
 	      if(zratio <= threshold_fraction_selected) {
 	        selected_threshold = step;
@@ -2128,10 +2128,10 @@ void Net::FindAndApplyThresholdNet(float threshold_fraction_low, float threshold
 	      }
 	    }
 
-        conv_weights.zerout(selected_threshold);
+        conv_weights.zerout(selected_threshold, 0, 0);
 
         if(verbose) {
-          float zcount = conv_weights.count_zero(0.0);
+          float zcount = conv_weights.count_zero(0.0, 0, 0);
           LOG(WARNING) << layers_[i]->layer_param().name() << " MaxAbsWeight=" << max_abs_value
               << " MaxThreshold=" << max_threshold_value << " SelectedThreshold=" << selected_threshold
               << " ZeroPercentage=" << (zcount*100/count);
@@ -2140,6 +2140,90 @@ void Net::FindAndApplyThresholdNet(float threshold_fraction_low, float threshold
     }
   }
 }
+
+
+void Net::FindAndApplyChannelThresholdNet(float threshold_fraction_low, float threshold_fraction_mid, float threshold_fraction_high,
+    float threshold_value_maxratio, float threshold_value_max, float threshold_step_factor, bool verbose) {
+
+  for (int i = 0; i < layers_.size(); i++) {
+    if (layers_[i]->type() == std::string("Convolution")) {
+      LayerBase& conv_layer = *layers_[i];
+      Blob& conv_weights = *conv_layer.blobs()[0];
+      const ConvolutionParameter& conv_param = layers_[i]->layer_param().convolution_param();
+      const string layer_name = layers_[i]->layer_param().name();
+
+      int num_group = conv_param.group();
+      //int stride = conv_param.stride_size()>0? conv_param.stride(0) : 1;
+      int kernel_shape_data[2];
+      if (conv_param.has_kernel_h() || conv_param.has_kernel_w()) {
+        kernel_shape_data[0] = conv_param.kernel_h();
+        kernel_shape_data[1] = conv_param.kernel_w();
+      } else {
+        const int num_kernel_dims = conv_param.kernel_size_size();
+        for (int i = 0; i < 2; ++i) {
+          kernel_shape_data[i] = conv_param.kernel_size((num_kernel_dims == 1) ? 0 : i);
+        }
+      }
+
+      int no = (conv_weights.num_axes() == 1)? conv_weights.count() : conv_weights.shape(0);
+      int ni = ((conv_weights.num_axes() == 1)? conv_weights.count() : conv_weights.shape(1))*num_group;
+      float count = conv_weights.count();
+      if(verbose) {
+        LOG(WARNING) << layers_[i]->layer_param().name() << " ni=" << ni << " no=" << no;
+      }
+
+      if(ni>=32 || no >= 32) {
+        float threshold_fraction_selected = ((ni>=256 && no >= 512)? threshold_fraction_high :
+            ((ni>=32 && no >= 32)? threshold_fraction_mid: threshold_fraction_low));
+
+        for(int c=0; c<no; c++) {
+          int weight_count_channel = ni * kernel_shape_data[0] * kernel_shape_data[1] / num_group;
+          int start_index = weight_count_channel * c;
+
+          float max_abs = std::abs(conv_weights.max(start_index, weight_count_channel));
+          float min_abs = std::abs(conv_weights.min(start_index, weight_count_channel));
+          float max_abs_value = std::max<float>(max_abs, min_abs);
+          float step_size = max_abs_value * threshold_step_factor;
+          float max_threshold_value = std::min<float>(std::min<float>(threshold_value_max, max_abs_value*threshold_value_maxratio), max_abs_value);
+
+          float selected_threshold = 0;
+          float granurality_start = 1000;
+          for(float granurality = granurality_start, search_iter=0; granurality>=1; granurality=granurality/10, search_iter++) {
+            float step_sizeX = step_size * granurality;
+            float range_sizeX = step_sizeX*10*2;
+            float start_valueX = selected_threshold;
+
+            float min_step_val = search_iter>0? std::max((start_valueX-range_sizeX),0.0f) : 0;
+            float max_step_val = search_iter>0? (start_valueX+range_sizeX) : max_threshold_value;
+            for(float step= min_step_val; step<max_step_val && step<max_threshold_value; step+=step_sizeX) {
+              float zcount = conv_weights.count_zero((float)step, start_index, weight_count_channel);
+              float zratio = zcount / weight_count_channel;
+              if(zratio <= threshold_fraction_selected) {
+                selected_threshold = step;
+              } else {
+                break;
+              }
+            }
+          }
+
+          conv_weights.zerout(selected_threshold, start_index, weight_count_channel);
+          //LOG(INFO) << "Layer:" << layer_name << " channel:" << c << " threshold:"
+          //   << selected_threshold << " sparsity:"<< conv_weights.count_zero(0.0, start_index, weight_count_channel);
+        }
+
+        if(verbose) {
+          float zcount = conv_weights.count_zero(0.0, 0, 0);
+          LOG(WARNING) << layers_[i]->layer_param().name()
+              //<< " MaxAbsWeight=" << max_abs_value
+              //<< " MaxThreshold=" << max_threshold_value << " SelectedThreshold=" << selected_threshold
+              << " ZeroPercentage=" << (zcount*100/count);
+        }
+      }
+    }
+  }
+}
+
+
 
 /**
  * ApplySparseModeConnectivity

@@ -541,23 +541,23 @@ class Blob {
   void gpu_eltwise_multi(int count, Type dtype, const void* X, void* Y);
 #endif
   
-  float cpu_max(int count, Type dtype, const void* X) const;
+  float cpu_max(int count, Type dtype, const void* X, const int start_index) const;
 #ifndef CPU_ONLY
-  float gpu_max(int count, Type dtype, const void* X) const;
+  float gpu_max(int count, Type dtype, const void* X, const int start_index) const;
 #endif
-  float max() const;
+  float max(const int start_index, const int count) const;
   
-  float cpu_min(int count, Type dtype, const void* X) const;
+  float cpu_min(int count, Type dtype, const void* X, const int start_index) const;
 #ifndef CPU_ONLY
-  float gpu_min(int count, Type dtype, const void* X) const;
+  float gpu_min(int count, Type dtype, const void* X, const int start_index) const;
 #endif
-  float min() const;
+  float min(const int start_index, const int count) const;
     
-  int cpu_count_zero(int count, Type dtype, const void* X, float threshold) const;
+  int cpu_count_zero(int count, Type dtype, const void* X, float threshold, const int start_index) const;
 #ifndef CPU_ONLY
-  int gpu_count_zero(int count, Type dtype, const void* X, float threshold) const;
+  int gpu_count_zero(int count, Type dtype, const void* X, float threshold, const int start_index) const;
 #endif
-  int count_zero(float threshold) const;
+  int count_zero(float threshold, const int start_index, const int count) const;
 
   void cpu_if_nonzero(int count, Type dtype, const void* X, void* Y) const;
 #ifndef CPU_ONLY
@@ -574,11 +574,11 @@ class Blob {
   void ComputeSparseData();
   void StoreSparseModeConnectivity(const SparseMode mode);
   
-  void cpu_zerout(int count, Type dtype, const void* X, void* Y, float threshold);
+  void cpu_zerout(int count, Type dtype, const void* X, void* Y, float threshold, const int start_index);
 #ifndef CPU_ONLY
-  void gpu_zerout(int count, Type dtype, const void* X, void* Y, float threshold);
+  void gpu_zerout(int count, Type dtype, const void* X, void* Y, float threshold, const int start_index);
 #endif
-  void zerout(float threshold);
+  void zerout(float threshold, const int start_index, const int count);
 
  protected:
   mutable shared_ptr<Tensor> data_tensor_;

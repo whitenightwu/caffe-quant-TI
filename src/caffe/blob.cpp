@@ -664,15 +664,15 @@ void Blob::gpu_eltwise_multi(int count, Type dtype, const void* X, void* Y) {
 }
 #endif
 
-float Blob::cpu_max(int count, Type dtype, const void* X) const {
+float Blob::cpu_max(int count, Type dtype, const void* X, const int start_index) const {
   if (is_type<float>(dtype)) {
-    return caffe_cpu_max(count, static_cast<const float*>(X));
+    return caffe_cpu_max(count, static_cast<const float*>(X)+start_index);
 #ifndef CPU_ONLY
   } else if (is_type<float16>(dtype)) {
-    return caffe_cpu_max(count, static_cast<const float16*>(X));
+    return caffe_cpu_max(count, static_cast<const float16*>(X)+start_index);
 #endif
   } else if (is_type<double>(dtype)) {
-    return caffe_cpu_max(count, static_cast<const double*>(X));
+    return caffe_cpu_max(count, static_cast<const double*>(X)+start_index);
   } else {
     LOG(FATAL) << "Unsupported data type: " << Type_Name(dtype);
 	return 0;
@@ -681,15 +681,15 @@ float Blob::cpu_max(int count, Type dtype, const void* X) const {
 }
 
 #ifndef CPU_ONLY
-float Blob::gpu_max(int count, Type dtype, const void* X) const {
+float Blob::gpu_max(int count, Type dtype, const void* X, const int start_index) const {
   if (is_type<float>(dtype)) {
-    return caffe_gpu_max(count, static_cast<const float*>(X));
+    return caffe_gpu_max(count, static_cast<const float*>(X)+start_index);
 #ifndef CPU_ONLY
   } else if (is_type<float16>(dtype)) {
-    return caffe_gpu_max(count, static_cast<const float16*>(X));
+    return caffe_gpu_max(count, static_cast<const float16*>(X)+start_index);
 #endif
   } else if (is_type<double>(dtype)) {
-    return caffe_gpu_max(count, static_cast<const double*>(X));
+    return caffe_gpu_max(count, static_cast<const double*>(X)+start_index);
   } else {
     LOG(FATAL) << "Unsupported data type: " << Type_Name(dtype);
 	return 0;
@@ -698,17 +698,20 @@ float Blob::gpu_max(int count, Type dtype, const void* X) const {
 }
 #endif
 
-float Blob::max() const {
+float Blob::max(const int start_index, const int count) const {
     const shared_ptr<SyncedMemory>& data_mem = data_tensor_->synced_mem();
 	if (!data_tensor_) {
 		return 0;
 	}
+
+	int n = count? count : this->count();
+
 	// We will perform update based on where the data is located.
 	switch (data_mem->head()) {
 	case SyncedMemory::HEAD_AT_CPU:
 	{
 		// perform computation on CPU
-		auto max_val = cpu_max(this->count(), data_type(), data_mem->cpu_data());
+		auto max_val = cpu_max(n, data_type(), data_mem->cpu_data(), start_index);
 		return max_val;
 	}
 	case SyncedMemory::HEAD_AT_GPU:
@@ -716,7 +719,7 @@ float Blob::max() const {
 	{
 #ifndef CPU_ONLY
 		// perform computation on GPU
-		float max_val = gpu_max(this->count(), data_type(), data_mem->gpu_data());
+		float max_val = gpu_max(n, data_type(), data_mem->gpu_data(), start_index);
 		return max_val;
 #else
 		NO_GPU;
@@ -731,15 +734,15 @@ float Blob::max() const {
 }
 
 
-float Blob::cpu_min(int count, Type dtype, const void* X) const {
+float Blob::cpu_min(int count, Type dtype, const void* X, const int start_index) const {
   if (is_type<float>(dtype)) {
-    return caffe_cpu_min(count, static_cast<const float*>(X));
+    return caffe_cpu_min(count, static_cast<const float*>(X)+start_index);
 #ifndef CPU_ONLY
   } else if (is_type<float16>(dtype)) {
-    return caffe_cpu_min(count, static_cast<const float16*>(X));
+    return caffe_cpu_min(count, static_cast<const float16*>(X)+start_index);
 #endif
   } else if (is_type<double>(dtype)) {
-    return caffe_cpu_min(count, static_cast<const double*>(X));
+    return caffe_cpu_min(count, static_cast<const double*>(X)+start_index);
   } else {
     LOG(FATAL) << "Unsupported data type: " << Type_Name(dtype);
 	return 0;
@@ -748,15 +751,15 @@ float Blob::cpu_min(int count, Type dtype, const void* X) const {
 }
 
 #ifndef CPU_ONLY
-float Blob::gpu_min(int count, Type dtype, const void* X) const {
+float Blob::gpu_min(int count, Type dtype, const void* X, const int start_index) const {
   if (is_type<float>(dtype)) {
-    return caffe_gpu_min(count, static_cast<const float*>(X));
+    return caffe_gpu_min(count, static_cast<const float*>(X)+start_index);
 #ifndef CPU_ONLY
   } else if (is_type<float16>(dtype)) {
-    return caffe_gpu_min(count, static_cast<const float16*>(X));
+    return caffe_gpu_min(count, static_cast<const float16*>(X)+start_index);
 #endif
   } else if (is_type<double>(dtype)) {
-    return caffe_gpu_min(count, static_cast<const double*>(X));
+    return caffe_gpu_min(count, static_cast<const double*>(X)+start_index);
   } else {
     LOG(FATAL) << "Unsupported data type: " << Type_Name(dtype);
 	return 0;
@@ -765,17 +768,20 @@ float Blob::gpu_min(int count, Type dtype, const void* X) const {
 }
 #endif
 
-float Blob::min() const {
+float Blob::min(const int start_index, const int count) const {
     const shared_ptr<SyncedMemory>& data_mem = data_tensor_->synced_mem();
 	if (!data_tensor_) {
 		return 0;
 	}
+
+    int n = count? count : this->count();
+
 	// We will perform update based on where the data is located.
 	switch (data_mem->head()) {
 	case SyncedMemory::HEAD_AT_CPU:
 	{
 		// perform computation on CPU
-		auto min_val = cpu_min(this->count(), data_type(), data_mem->cpu_data());
+		auto min_val = cpu_min(n, data_type(), data_mem->cpu_data(), start_index);
 		return min_val;
 	}
 	case SyncedMemory::HEAD_AT_GPU:
@@ -783,7 +789,7 @@ float Blob::min() const {
 	{
 #ifndef CPU_ONLY
 		// perform computation on GPU
-		float min_val = gpu_min(this->count(), data_type(), data_mem->gpu_data());
+		float min_val = gpu_min(n, data_type(), data_mem->gpu_data(), start_index);
 		return min_val;
 #else
 		NO_GPU;
@@ -857,15 +863,15 @@ void Blob::StoreSparseModeConnectivity(const SparseMode mode) {
 	}
 }
 
-int Blob::cpu_count_zero(int count, Type dtype, const void* X, float threshold) const {
+int Blob::cpu_count_zero(int count, Type dtype, const void* X, float threshold, const int start_index) const {
   if (is_type<float>(dtype)) {
-    return caffe_cpu_count_zero(count, static_cast<const float*>(X), (float)threshold);
+    return caffe_cpu_count_zero(count, static_cast<const float*>(X)+start_index, (float)threshold);
 #ifndef CPU_ONLY
   } else if (is_type<float16>(dtype)) {
-    return caffe_cpu_count_zero(count, static_cast<const float16*>(X), (float16)threshold);
+    return caffe_cpu_count_zero(count, static_cast<const float16*>(X)+start_index, (float16)threshold);
 #endif
   } else if (is_type<double>(dtype)) {
-    return caffe_cpu_count_zero(count, static_cast<const double*>(X),  (double)threshold);
+    return caffe_cpu_count_zero(count, static_cast<const double*>(X)+start_index,  (double)threshold);
   } else {
     LOG(FATAL) << "Unsupported data type: " << Type_Name(dtype);
 	return 0;
@@ -873,13 +879,13 @@ int Blob::cpu_count_zero(int count, Type dtype, const void* X, float threshold) 
 }
 
 #ifndef CPU_ONLY
-int Blob::gpu_count_zero(int count, Type dtype, const void* X, float threshold) const {
+int Blob::gpu_count_zero(int count, Type dtype, const void* X, float threshold, const int start_index) const {
   if (is_type<float>(dtype)) {
-    return caffe_gpu_count_zero(count, static_cast<const float*>(X), (float)threshold);
+    return caffe_gpu_count_zero(count, static_cast<const float*>(X)+start_index, (float)threshold);
   } else if (is_type<float16>(dtype)) {
-    return caffe_gpu_count_zero(count, static_cast<const float16*>(X), (float16)threshold);
+    return caffe_gpu_count_zero(count, static_cast<const float16*>(X)+start_index, (float16)threshold);
   } else if (is_type<double>(dtype)) {
-    return caffe_gpu_count_zero(count, static_cast<const double*>(X), (double)threshold);
+    return caffe_gpu_count_zero(count, static_cast<const double*>(X)+start_index, (double)threshold);
   } else {
     LOG(FATAL) << "Unsupported data type: " << Type_Name(dtype);
 	return 0;
@@ -887,18 +893,20 @@ int Blob::gpu_count_zero(int count, Type dtype, const void* X, float threshold) 
 }
 #endif
 
-int Blob::count_zero(float threshold) const {
+int Blob::count_zero(float threshold, const int start_index, const int count) const {
     const shared_ptr<SyncedMemory>& data_mem = data_tensor_->synced_mem();
 	if (!data_mem) {
 		return 0;
 	}
+
+	int n = count? count : this->count();
 
 	// We will perform update based on where the data is located.
 	switch (data_mem->head()) {
 	case SyncedMemory::HEAD_AT_CPU:
 	{
 		// perform computation on CPU
-		int zero_num = cpu_count_zero(this->count(), data_type(), data_mem->cpu_data(), threshold);
+		int zero_num = cpu_count_zero(n, data_type(), data_mem->cpu_data(), threshold, start_index);
 		return zero_num;
 	}
 	case SyncedMemory::HEAD_AT_GPU:
@@ -906,7 +914,7 @@ int Blob::count_zero(float threshold) const {
 	{
 #ifndef CPU_ONLY
 		// perform computation on GPU
-		int zero_num = gpu_count_zero(this->count(), data_type(), data_mem->gpu_data(), threshold);
+		int zero_num = gpu_count_zero(n, data_type(), data_mem->gpu_data(), threshold, start_index);
 		return zero_num;
 #else
 		NO_GPU;
@@ -985,38 +993,41 @@ void Blob::InitializeConnectivity(float val) {
 	}
 }
 
-void Blob::cpu_zerout(int count, Type dtype, const void* X, void* Y, float threshold) {
+void Blob::cpu_zerout(int count, Type dtype, const void* X, void* Y, float threshold, const int start_index) {
   if (is_type<float>(dtype)) {
-    caffe_cpu_zerout(count, static_cast<const float*>(X), static_cast<float*>(Y), (float)threshold);
+    caffe_cpu_zerout(count, static_cast<const float*>(X)+start_index, static_cast<float*>(Y)+start_index, (float)threshold);
 #ifndef CPU_ONLY
   } else if (is_type<float16>(dtype)) {
-    caffe_cpu_zerout(count, static_cast<const float16*>(X), static_cast<float16*>(Y), (float16)threshold);
+    caffe_cpu_zerout(count, static_cast<const float16*>(X)+start_index, static_cast<float16*>(Y)+start_index, (float16)threshold);
 #endif
   } else if (is_type<double>(dtype)) {
-    caffe_cpu_zerout(count, static_cast<const double*>(X), static_cast<double*>(Y), (double)threshold);
+    caffe_cpu_zerout(count, static_cast<const double*>(X)+start_index, static_cast<double*>(Y)+start_index, (double)threshold);
   } else {
     LOG(FATAL) << "Unsupported data type: " << Type_Name(dtype);
   }
 }
 
 #ifndef CPU_ONLY
-void Blob::gpu_zerout(int count, Type dtype, const void* X, void* Y, float threshold) {
+void Blob::gpu_zerout(int count, Type dtype, const void* X, void* Y, float threshold, const int start_index) {
   if (is_type<float>(dtype)) {
-    caffe_gpu_zerout(count, static_cast<const float*>(X), static_cast<float*>(Y), (float)threshold);
+    caffe_gpu_zerout(count, static_cast<const float*>(X)+start_index, static_cast<float*>(Y)+start_index, (float)threshold);
   } else if (is_type<float16>(dtype)) {
-    caffe_gpu_zerout(count, static_cast<const float16*>(X), static_cast<float16*>(Y), (float16)threshold);
+    caffe_gpu_zerout(count, static_cast<const float16*>(X)+start_index, static_cast<float16*>(Y)+start_index, (float16)threshold);
   } else if (is_type<double>(dtype)) {
-    caffe_gpu_zerout(count, static_cast<const double*>(X), static_cast<double*>(Y), (double)threshold);
+    caffe_gpu_zerout(count, static_cast<const double*>(X)+start_index, static_cast<double*>(Y)+start_index, (double)threshold);
   } else {
     LOG(FATAL) << "Unsupported data type: " << Type_Name(dtype);
   }
 }
 #endif
 
-void Blob::zerout(float threshold) {
+void Blob::zerout(float threshold, const int start_index, const int count) {
   if (!data_tensor_) {
       return;
   }
+
+  int n = count? count : this->count();
+
   const shared_ptr<SyncedMemory>& data_mem = data_tensor_->synced_mem();
 
 	// We will perform update based on where the data is located.
@@ -1024,7 +1035,7 @@ void Blob::zerout(float threshold) {
   case SyncedMemory::HEAD_AT_CPU:
   {
 	// perform computation on CPU
-	cpu_zerout(this->count(), data_type(), data_mem->cpu_data(), data_mem->mutable_cpu_data(), threshold);
+	cpu_zerout(n, data_type(), data_mem->cpu_data(), data_mem->mutable_cpu_data(), threshold, start_index);
 	break;
   }
   case SyncedMemory::HEAD_AT_GPU:
@@ -1032,7 +1043,7 @@ void Blob::zerout(float threshold) {
   {
 #ifndef CPU_ONLY
  	// perform computation on GPU
-	gpu_zerout(this->count(), data_type(), data_mem->gpu_data(), data_mem->mutable_gpu_data(), threshold);
+	gpu_zerout(n, data_type(), data_mem->gpu_data(), data_mem->mutable_gpu_data(), threshold, start_index);
 #else
 	NO_GPU;
 #endif
