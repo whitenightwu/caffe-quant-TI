@@ -672,6 +672,9 @@ void Net::AppendParam(const NetParameter& param, const int layer_id, const int p
 float Net::ForwardFromTo(int start, int end) {
   CHECK_GE(start, 0);
   CHECK_LT(end, layers_.size());
+
+  this->StartQuantization();
+
   float loss = 0;
   for (int i = start; i <= end; ++i) {
     // LOG(INFO) << " ****** [Forward] (" << i << ") Layer '" << layer_names_[i];
@@ -681,6 +684,9 @@ float Net::ForwardFromTo(int start, int end) {
     loss += layer_loss;
     if (debug_info_) { ForwardDebugInfo(i); }
   }
+
+  this->FinishQuantization();
+
   ++infer_count_;
   return loss;
 }
@@ -1715,6 +1721,35 @@ void Net::OptimizeNet() {
 
 template void Net::OptimizeNet<float>();
 
+void Net::StartQuantization() {
+  const QuantizationParameter& qparam = net_param_.quantization_param();
+
+  if (net_param_.quantization_enable() && net_param_.quantization_start_iter() > 0 && infer_count_ >= net_param_.quantization_start_iter()) {
+    QuantizationParameter_Rounding rounding_scheme = (this->phase() == caffe::TRAIN ?
+            QuantizationParameter_Rounding_STOCHASTIC : qparam.rounding_scheme());
+    if(infer_count_ == net_param_.quantization_start_iter()) {
+      this->AddQuantizationParams();
+    }
+
+    this->SetQuantizationParams(qparam.precision(), rounding_scheme,
+        qparam.bw_weights(), qparam.bw_weights(),
+        qparam.bw_layer_in(), qparam.bw_layer_out(),
+        net_param_.unsigned_check_in(), net_param_.unsigned_check_out(),
+        net_param_.quantize_weights(), net_param_.quantize_activations());
+  }
+}
+
+void Net::FinishQuantization() {
+  string phase = this->phase() == caffe::TRAIN ? "Train" : "Test";
+  if (net_param_.quantization_enable() && net_param_.quantization_start_iter() > 0 && infer_count_ >= net_param_.quantization_start_iter()) {
+    this->UpdateQuantizationRangeInLayers();
+
+    if (net_param_.display_quantization() > 0 && (infer_count_ % net_param_.display_quantization() == 0)) {
+      LOG(INFO)<< "Quantizing the net: " << this->name() + " " + phase;
+      this->DisplayQuantizationParams(net_param_.quantize_weights(), net_param_.quantize_activations());
+    }
+  }
+}
 
 void Net::ClearQuantizationRangeInLayers() {
   max_in_.clear();
@@ -1818,7 +1853,7 @@ void Net::UpdateQuantizationRangeInLayers() {
   }
 }
 
-void Net::SetTrainQuantizationParamsLayerInput(const int layer_id, QuantizationParameter_Precision precision,
+void Net::SetQuantizationParamsLayerInput(const int layer_id, QuantizationParameter_Precision precision,
     QuantizationParameter_Rounding rounding_scheme, const int bw_conv, const int bw_fc, const int bw_in,
     const int bw_out, bool unsigned_check_in, bool unsigned_check_out) {
   QuantizationParameter& quantization_param = *layers_[layer_id]->mutable_layer_param().mutable_quantization_param();
@@ -1861,7 +1896,7 @@ void Net::SetTrainQuantizationParamsLayerInput(const int layer_id, QuantizationP
   }
 }
 
-void Net::SetTrainQuantizationParamsLayerOutput(const int layer_id, QuantizationParameter_Precision precision,
+void Net::SetQuantizationParamsLayerOutput(const int layer_id, QuantizationParameter_Precision precision,
     QuantizationParameter_Rounding rounding_scheme, const int bw_conv, const int bw_fc, const int bw_in,
     const int bw_out, bool unsigned_check_in, bool unsigned_check_out) {
   QuantizationParameter& quantization_param = *layers_[layer_id]->mutable_layer_param().mutable_quantization_param();
@@ -1907,7 +1942,7 @@ void Net::SetTrainQuantizationParamsLayerOutput(const int layer_id, Quantization
   }
 }
 
-void Net::SetTrainQuantizationParamsLayerParams(const int layer_id, QuantizationParameter_Precision precision,
+void Net::SetQuantizationParamsLayerParams(const int layer_id, QuantizationParameter_Precision precision,
     QuantizationParameter_Rounding rounding_scheme, const int bw_conv, const int bw_fc, const int bw_in,
     const int bw_out, bool unsigned_check_in, bool unsigned_check_out) {
   QuantizationParameter& quantization_param = *layers_[layer_id]->mutable_layer_param().mutable_quantization_param();
@@ -1923,7 +1958,7 @@ void Net::SetTrainQuantizationParamsLayerParams(const int layer_id, Quantization
   }
 }
 
-void Net::SetTrainQuantizationParams(QuantizationParameter_Precision precision,
+void Net::SetQuantizationParams(QuantizationParameter_Precision precision,
     QuantizationParameter_Rounding rounding_scheme, const int bw_conv, const int bw_fc, const int bw_in,
     const int bw_out, bool unsigned_check_in, bool unsigned_check_out,
     bool quantize_weights, bool quantize_activations) {
@@ -1932,33 +1967,21 @@ void Net::SetTrainQuantizationParams(QuantizationParameter_Precision precision,
     if (layers_[layer_id]->layer_param().has_quantization_param()) {
       // quantize parameters
       if(true) { //if (quantize_weights) {
-        SetTrainQuantizationParamsLayerParams(layer_id, precision, rounding_scheme, bw_conv, bw_fc, bw_in, bw_out, unsigned_check_in,
+        SetQuantizationParamsLayerParams(layer_id, precision, rounding_scheme, bw_conv, bw_fc, bw_in, bw_out, unsigned_check_in,
             unsigned_check_out);
       }
 
       // quantize input activations
       if(true) { //if (quantize_activations) {
-        SetTrainQuantizationParamsLayerInput(layer_id, precision, rounding_scheme, bw_conv, bw_fc, bw_in, bw_out, unsigned_check_in,
+        SetQuantizationParamsLayerInput(layer_id, precision, rounding_scheme, bw_conv, bw_fc, bw_in, bw_out, unsigned_check_in,
             unsigned_check_out);
       }
 
       // quantize output activations
       if(true) { //if (quantize_activations) {
-        SetTrainQuantizationParamsLayerOutput(layer_id, precision, rounding_scheme, bw_conv, bw_fc, bw_in, bw_out, unsigned_check_in,
+        SetQuantizationParamsLayerOutput(layer_id, precision, rounding_scheme, bw_conv, bw_fc, bw_in, bw_out, unsigned_check_in,
             unsigned_check_out);
       }
-    }
-  }
-}
-
-void Net::SetTestQuantizationParams(QuantizationParameter_Precision precision,
-    QuantizationParameter_Rounding rounding_scheme, const int bw_conv, const int bw_fc, const int bw_in,
-    const int bw_out, bool unsigned_check_in, bool unsigned_check_out, bool quantize_weights,
-    bool quantize_activations) {
-  for (int layer_id = 0; layer_id < layers_.size(); layer_id++) {
-    if (layers_[layer_id]->layer_param().has_quantization_param()) {
-      QuantizationParameter& quantization_param = *layers_[layer_id]->mutable_layer_param().mutable_quantization_param();
-      quantization_param.set_rounding_scheme(rounding_scheme);
     }
   }
 }

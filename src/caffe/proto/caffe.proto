@@ -149,6 +149,17 @@ message NetParameter {
 
   // Sets the default "cudnn_math_override" value for every layer
   optional int32 default_cudnn_math_override = 19 [default = -1];
+  
+  // Quantization params  
+  optional bool quantization_enable = 150 [default = false];
+  optional int32 quantization_start_iter = 151 [default = 1];  
+  optional bool unsigned_check_in = 152 [default = true];
+  optional bool unsigned_check_out = 153 [default = true];
+  optional bool quantize_weights = 154 [default = true];
+  optional bool quantize_activations = 155 [default = true];   
+  optional int32 display_quantization = 156 [default = 2000];
+  optional bool insert_quantization_param = 157 [default = true];
+  optional QuantizationParameter quantization_param = 158;    
 }
 
 message NetLogParameter {
@@ -335,31 +346,20 @@ message SolverParameter {
   optional bool store_blobs_in_old_format = 45 [default = false];
 
   // Ignore mismatching blobs and continue while loading weights
-  optional bool ignore_mismatching_blobs = 50 [default = false];
+  optional bool ignore_mismatching_blobs = 150 [default = false];
     
   // Wite additional snapshot in txt format
-  optional bool snapshot_log = 51 [default = false];
+  optional bool snapshot_log = 151 [default = false];
 
   // Sparsity params
-  optional int32 display_sparsity = 52 [default = 0];
-  optional SparseMode sparse_mode = 53 [default = SPARSE_NONE];  
-
-  // Quantization params  
-  optional uint32 quantization_start_iter = 54 [default = 2000];  
-  optional bool unsigned_check_in = 55 [default = true];
-  optional bool unsigned_check_out = 56 [default = true];
-  optional bool quantize_weights = 57 [default = true];
-  optional bool quantize_activations = 58 [default = true];   
-  optional QuantizationParameter quantization_param = 59;  
-
-  optional int32 display_quantization = 60 [default = 2000];
-  optional bool insert_quantization_param = 61 [default = false];
+  optional int32 display_sparsity = 152 [default = 0];
+  optional SparseMode sparse_mode = 153 [default = SPARSE_NONE];  
   
-  optional float sparsity_target = 62 [default = 0.0]; //desired sparsity as a fraction
-  optional float sparsity_step_factor = 63 [default = 0.01];  //sprsity step factor. 0.01 is 1%
-  optional int32 sparsity_step_iter = 64 [default = 1000];  //sprsity step increment iterations
-  optional int32 sparsity_start_iter = 65 [default = 0];  //sprsity start iteration  
-  optional float sparsity_start_factor = 66 [default = 0.0];  //sprsity start factor
+  optional float sparsity_target = 154 [default = 0.0]; //desired sparsity as a fraction
+  optional float sparsity_step_factor = 155 [default = 0.01];  //sprsity step factor. 0.01 is 1%
+  optional int32 sparsity_step_iter = 156 [default = 1000];  //sprsity step increment iterations
+  optional int32 sparsity_start_iter = 157 [default = 0];  //sprsity start iteration  
+  optional float sparsity_start_factor = 158 [default = 0.0];  //sprsity start factor
 }
 
 // A message that stores the solver snapshots

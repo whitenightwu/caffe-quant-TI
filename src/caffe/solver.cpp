@@ -185,47 +185,6 @@ void Solver::InitTestNets() {
   }
 }
 
-void Solver::StartQuantization(shared_ptr<Net>& net) {
-  if (param_.quantization_start_iter() > 0 && iter_ >= param_.quantization_start_iter()) {
-    QuantizationParameter_Rounding rounding_scheme = (
-        net->phase() == caffe::TRAIN ?
-            QuantizationParameter_Rounding_STOCHASTIC : param_.quantization_param().rounding_scheme());
-    if (net->phase() == caffe::TRAIN) {
-      if(iter_ == param_.quantization_start_iter()) {
-        net_->AddQuantizationParams();
-      }
-
-      net->SetTrainQuantizationParams(param_.quantization_param().precision(), rounding_scheme,
-          param_.quantization_param().bw_weights(), param_.quantization_param().bw_weights(),
-          param_.quantization_param().bw_layer_in(), param_.quantization_param().bw_layer_out(),
-          param_.unsigned_check_in(), param_.unsigned_check_out(),
-          param_.quantize_weights(), param_.quantize_activations());
-    } else {
-      net->SetTestQuantizationParams(param_.quantization_param().precision(), rounding_scheme,
-          param_.quantization_param().bw_weights(), param_.quantization_param().bw_weights(),
-          param_.quantization_param().bw_layer_in(), param_.quantization_param().bw_layer_out(),
-          param_.unsigned_check_in(), param_.unsigned_check_out(),
-          param_.quantize_weights(), param_.quantize_activations());
-    }
-  }
-}
-
-void Solver::FinishQuantization(shared_ptr<Net>& net) {
-  string phase = net->phase() == caffe::TRAIN ? "Train" : "Test";
-  if (net->phase() == caffe::TRAIN && param_.quantization_start_iter() > 0) {
-    if (iter_ >= param_.quantization_start_iter()) {
-      if (param_.display_quantization() > 0 && (iter_ % param_.display_quantization() == 0)) {
-        LOG(INFO)<< "Quantizing the net: " << net->name() + " " + phase;
-        net->DisplayQuantizationParams(param_.quantize_weights(), param_.quantize_activations());
-      }
-    } else {
-      //LOG(INFO)<< "Updating Quantization ranges for the net: " << net->name() + " " + phase;
-      net->UpdateQuantizationRangeInLayers();
-    }
-  }
-}
-
-
 void Solver::Step(int iters) {
   const int start_iter = iter_;
   const int stop_iter = iter_ + iters;

@@ -284,27 +284,25 @@ class Net {
 #endif
   }
 
-  int GetSparsity(std::map<std::string, std::pair<int,int> >& sparsity_map);
+  //Quantization
+  void StartQuantization();
+  void FinishQuantization();
   void ClearQuantizationRangeInLayers();
   void UpdateQuantizationRangeInLayers();
   void CopyQuantizationRangeInLayers();
-  void SetTrainQuantizationParamsLayerParams(const int layer_id,
+  void SetQuantizationParamsLayerParams(const int layer_id,
   	  QuantizationParameter_Precision precision, QuantizationParameter_Rounding rounding_scheme,
         const int bw_conv, const int bw_fc, const int bw_in, const int bw_out,
         bool unsigned_check_in, bool unsigned_check_out);
-  void SetTrainQuantizationParamsLayerInput(const int layer_id,
+  void SetQuantizationParamsLayerInput(const int layer_id,
   	  QuantizationParameter_Precision precision, QuantizationParameter_Rounding rounding_scheme,
         const int bw_conv, const int bw_fc, const int bw_in, const int bw_out,
         bool unsigned_check_in, bool unsigned_check_out);
-  void SetTrainQuantizationParamsLayerOutput(const int layer_id,
+  void SetQuantizationParamsLayerOutput(const int layer_id,
   	  QuantizationParameter_Precision precision, QuantizationParameter_Rounding rounding_scheme,
         const int bw_conv, const int bw_fc, const int bw_in, const int bw_out,
         bool unsigned_check_in, bool unsigned_check_out);
-  void SetTrainQuantizationParams(QuantizationParameter_Precision precision, QuantizationParameter_Rounding rounding_scheme,
-    const int bw_conv, const int bw_fc, const int bw_in, const int bw_out,
-    bool unsigned_check_in, bool unsigned_check_out,
-    bool quantize_weights, bool quantize_activations);
-  void SetTestQuantizationParams(QuantizationParameter_Precision precision, QuantizationParameter_Rounding rounding_scheme,
+  void SetQuantizationParams(QuantizationParameter_Precision precision, QuantizationParameter_Rounding rounding_scheme,
     const int bw_conv, const int bw_fc, const int bw_in, const int bw_out,
     bool unsigned_check_in, bool unsigned_check_out,
     bool quantize_weights, bool quantize_activations);
@@ -319,7 +317,9 @@ class Net {
 		  bool& unsigned_layer_in, float& min_layer_in, float& max_layer_in);
   int GetIntegerLengthOut(const int layer_id, bool unsigned_check_out,
 		  bool& unsigned_layer_out, float& min_layer_out, float& max_layer_out);  
-  template <typename Dtype> void OptimizeNet();
+
+  //Sparsity
+  int GetSparsity(std::map<std::string, std::pair<int,int> >& sparsity_map);
   void FindAndApplyThresholdNet(float threshold_fraction_low, float threshold_fraction_mid, float threshold_fraction_high,
       float threshold_value_maxratio, float threshold_value, float threshold_step_factor, bool verbose = true);
   void FindAndApplyChannelThresholdNet(float threshold_fraction_low, float threshold_fraction_mid, float threshold_fraction_high,
@@ -328,6 +328,9 @@ class Net {
   void StoreSparseModeConnectivity(SparseMode mode);
   void DisplaySparsity();
   
+  //Batch Norm  Optimization
+  template <typename Dtype> void OptimizeNet();
+
  protected:
   // Helpers for Init.
   /// @brief Append a new top blob to the net.
