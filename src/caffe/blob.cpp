@@ -63,13 +63,6 @@ void Blob::Reshape(const vector<int>& shape) {
   diff_tensor_->Reshape(count_);
   CHECK(is_current_data_valid());
   CHECK(is_current_diff_valid());
-  /*
-  if(!connectivity_) {
-    connectivity_ = make_shared<Tensor>(last_data_type_);
-  }
-  connectivity_->Reshape(count_); 
-  initialize_connectivity();    
-  */
 }
 
 void Blob::Reshape(const BlobShape& shape) {
@@ -203,12 +196,8 @@ void Blob::ComputeSparseData() {
 // TBlob<int> or TBlob<unsigned int>.
 void Blob::Update() {
   convert_diff(data_type());  // align data&diff types
-
-  this->ComputeSparseDiff();
-
   shared_ptr<SyncedMemory>& data_mem = data_tensor_->mutable_synced_mem();
   const shared_ptr<SyncedMemory>& diff_mem = diff_tensor_->synced_mem();
-  
   // We will perform update based on where the data is located.
   switch (data_mem->head()) {
   case SyncedMemory::HEAD_AT_CPU:
