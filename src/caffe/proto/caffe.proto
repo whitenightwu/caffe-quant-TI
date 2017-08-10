@@ -43,7 +43,7 @@ message BlobProtoVector {
 message BlobProtoLog {
 	optional string name = 1 [default = ''];
 	optional bool is_quantized = 2 [default = false];
-	optional bool is_unsigned = 3 [default = false];	
+	optional bool unsigned_data = 3 [default = false];	
 	optional int32 bw = 4 [default = 0];
 	optional int32 fl = 5 [default = 0];
 	optional BlobProto blob_data = 6;
@@ -93,6 +93,65 @@ message FillerParameter {
   }
   optional VarianceNorm variance_norm = 8 [default = FAN_IN];
 }
+
+// Message for layers with reduced word with arithmetic
+enum QuantizationParameter_Precision {
+  QuantizationParameter_Precision_FLOAT = 0;    
+  QuantizationParameter_Precision_DYNAMIC_FIXED_POINT = 1;
+}
+enum QuantizationParameter_Rounding {
+  QuantizationParameter_Rounding_NEAREST = 0;
+  QuantizationParameter_Rounding_STOCHASTIC = 1;
+}
+
+// Quantization params for a layer
+message QuantizationParameter {  
+  optional QuantizationParameter_Precision precision = 1 [default = QuantizationParameter_Precision_DYNAMIC_FIXED_POINT];  
+  optional QuantizationParameter_Rounding rounding_scheme = 2 [default = QuantizationParameter_Rounding_NEAREST];
+  optional bool power2_range = 3 [default = false];
+      
+  // Dynamic fixed point params
+  message QParams {
+    optional bool quantize = 1 [default = false];  
+    optional uint32 bitwidth = 2 [default = 8];    
+    optional uint32 fracbits = 4 [default = 0];
+    optional bool unsigned_data = 5 [ default = false];
+    optional bool unsigned_quant = 6 [ default = false];    
+    optional float scale = 7 [default = 0];
+    optional float offset = 8 [default = 0];    
+    optional float min = 9 [default = 0];
+    optional float max = 10 [default = 0];    
+  }
+  repeated QParams qparam_in = 4;
+  optional QParams qparam_out = 5;
+  optional QParams qparam_w = 6;
+}
+
+// Quantization params for the net  
+message NetQuantizationParameter {
+  //frame/iter at which quantization is introduced    
+  optional int32 quantization_start = 1 [default = 1];
+  
+  //indicates whether quantized range is power of 2 or not. 
+  //if input is quantized with power2 range, the output quantized value can be obtained by shifting with fracbits
+  optional bool power2_range = 12 [default = false];
+    
+  optional QuantizationParameter_Precision precision = 2 [default = QuantizationParameter_Precision_DYNAMIC_FIXED_POINT];  
+  optional QuantizationParameter_Rounding rounding_scheme = 3 [default = QuantizationParameter_Rounding_NEAREST];  
+  optional uint32 bitwidth_activations = 4 [default = 8];
+  optional uint32 bitwidth_weights = 5 [default = 8];
+        
+  optional bool quantize_weights = 8 [default = true];
+  optional bool quantize_activations = 9 [default = true];   
+    
+  optional int32 display_quantization = 10 [default = 2000];
+  optional bool insert_quantization_param = 11 [default = true];
+    
+  //apply offset to make quantized range unsigned.
+  optional bool force_unsigned_quant_activations = 13 [default = false];
+  optional bool force_unsigned_quant_weights = 14 [default = true];
+}
+
 
 message NetParameter {
   optional string name = 1; // consider giving the network a name
@@ -150,16 +209,8 @@ message NetParameter {
   // Sets the default "cudnn_math_override" value for every layer
   optional int32 default_cudnn_math_override = 19 [default = -1];
   
-  // Quantization params  
-  optional bool quantization_enable = 150 [default = false];
-  optional int32 quantization_start_iter = 151 [default = 1];  
-  optional bool unsigned_check_in = 152 [default = true];
-  optional bool unsigned_check_out = 153 [default = true];
-  optional bool quantize_weights = 154 [default = true];
-  optional bool quantize_activations = 155 [default = true];   
-  optional int32 display_quantization = 156 [default = 2000];
-  optional bool insert_quantization_param = 157 [default = true];
-  optional QuantizationParameter quantization_param = 158;    
+  optional bool quantize = 200 [default = false];  
+  optional NetQuantizationParameter net_quantization_param = 201;  
 }
 
 message NetLogParameter {
@@ -424,6 +475,7 @@ message ParamSpec {
   optional float decay_mult = 4 [default = 1.0];
 }
 
+
 // NOTE
 // Update the next available ID when you add a new LayerParameter field.
 //
@@ -556,51 +608,7 @@ message LayerParameter {
   optional bool snapshot_log_in = 8406 [default = false];
   optional bool snapshot_log_out = 8407 [default = false]; 
 }
-
-
-// Message for layers with reduced word with arithmetic
-message QuantizationParameter{
-  enum Precision {
-    DYNAMIC_FIXED_POINT = 0;
-    MINIFLOAT = 1;
-    INTEGER_POWER_OF_2_WEIGHTS = 2;
-    FLOAT = 3;    
-  }
-  optional Precision precision = 1 [default = DYNAMIC_FIXED_POINT];
-  enum Rounding {
-    NEAREST = 0;
-    STOCHASTIC = 1;
-  }
-  optional Rounding rounding_scheme = 2 [default = NEAREST];
-  // Dynamic fixed point word width
-  optional uint32 bw_layer_in = 3 [default = 8];
-  optional uint32 bw_layer_out = 4 [default = 8];
-  optional uint32 bw_weights = 5 [default = 8];
-  repeated int32 fl_layer_in = 6;
-  optional int32 fl_layer_out = 7 [default = 16];
-  optional int32 fl_weights = 8 [default = 16];
-
-  // Minifloat word width
-  optional uint32 mant_bits = 9 [default = 23];
-  optional uint32 exp_bits = 10 [default = 8];
-  // Integer-power-of-two weights
-  optional int32 exp_min = 11 [default = -8];
-  optional int32 exp_max = 12 [default = -1];
   
-  repeated bool unsigned_layer_in = 13;  
-  optional bool unsigned_layer_out = 14 [default = false]; 
-  repeated float min_layer_in = 15;
-  optional float min_layer_out = 16 [default = 0];
-  repeated float max_layer_in = 17;
-  optional float max_layer_out = 18 [default = 0]; 
-  optional float min_layer_weights = 19 [default = 0];
-  optional float max_layer_weights = 20 [default = 0]; 
-    
-  optional bool quantize_layer_in = 21 [default = false];  
-  optional bool quantize_layer_out = 22 [default = false]; 
-  optional bool quantize_layer_weights = 23 [default = false]; 
-}
-
 // Message that stores parameters used to apply transformation
 // to the data layer's data
 message TransformationParameter {

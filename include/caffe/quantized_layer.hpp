@@ -36,32 +36,15 @@ public:
   void QuantizeLayerInputs_gpu(Ftype* data, const int blob_id, const int count);
   void QuantizeWeights_cpu(Ftype* data, const int count, const int rounding, bool clip);
   void QuantizeWeights_gpu(Ftype* data, const int count, const int rounding, bool clip);
+
   /**
    * @brief Trim data to fixed point.
    * @param fl The number of bits in the fractional part.
    */
-  void Trim2FixedPoint_cpu(Ftype* data, const int cnt, const int bit_width,
-      const int rounding, int fl, bool unsigned_data, bool clip);
-  void Trim2FixedPoint_gpu(Ftype* data, const int cnt, const int bit_width,
-      const int rounding, int fl, bool unsigned_data, bool clip);
-  /**
-   * @brief Trim data to minifloat.
-   * @param bw_mant The number of bits used to represent the mantissa.
-   * @param bw_exp The number of bits used to represent the exponent.
-   */
-  void Trim2MiniFloat_cpu(Ftype* data, const int cnt, const int bw_mant,
-      const int bw_exp, const int rounding);
-  void Trim2MiniFloat_gpu(Ftype* data, const int cnt, const int bw_mant,
-      const int bw_exp, const int rounding);
-  /**
-   * @brief Trim data to integer-power-of-two numbers.
-   * @param min_exp The smallest quantized value is 2^min_exp.
-   * @param min_exp The largest quantized value is 2^max_exp.
-   */
-  void Trim2IntegerPowerOf2_cpu(Ftype* data, const int cnt, const int min_exp,
-      const int max_exp, const int rounding);
-  void Trim2IntegerPowerOf2_gpu(Ftype* data, const int cnt, const int min_exp,
-      const int max_exp, const int rounding);
+  void Trim2FixedPoint_cpu(Ftype* data, const int cnt, bool power2_range, const int bitwidth,
+      const int rounding, int fracbits, float scale, float offset, bool unsigned_quant, bool clip);
+  void Trim2FixedPoint_gpu(Ftype* data, const int cnt, bool power2_range, const int bitwidth,
+      const int rounding, int fracbits, float scale, float offset, bool unsigned_quant, bool clip);
 	  
   /**
    * @brief Generate random number in [0,1) range.

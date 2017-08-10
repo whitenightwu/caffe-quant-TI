@@ -287,36 +287,24 @@ class Net {
   //Quantization
   void StartQuantization();
   void FinishQuantization();
+  void AddQuantizationParams();
+
   void ClearQuantizationRangeInLayers();
   void UpdateQuantizationRangeInLayers();
   void CopyQuantizationRangeInLayers();
-  void SetQuantizationParamsLayerParams(const int layer_id,
-  	  QuantizationParameter_Precision precision, QuantizationParameter_Rounding rounding_scheme,
-        const int bw_conv, const int bw_fc, const int bw_in, const int bw_out,
-        bool unsigned_check_in, bool unsigned_check_out);
-  void SetQuantizationParamsLayerInput(const int layer_id,
-  	  QuantizationParameter_Precision precision, QuantizationParameter_Rounding rounding_scheme,
-        const int bw_conv, const int bw_fc, const int bw_in, const int bw_out,
-        bool unsigned_check_in, bool unsigned_check_out);
-  void SetQuantizationParamsLayerOutput(const int layer_id,
-  	  QuantizationParameter_Precision precision, QuantizationParameter_Rounding rounding_scheme,
-        const int bw_conv, const int bw_fc, const int bw_in, const int bw_out,
-        bool unsigned_check_in, bool unsigned_check_out);
-  void SetQuantizationParams(QuantizationParameter_Precision precision, QuantizationParameter_Rounding rounding_scheme,
-    const int bw_conv, const int bw_fc, const int bw_in, const int bw_out,
-    bool unsigned_check_in, bool unsigned_check_out,
-    bool quantize_weights, bool quantize_activations);
-  void DisplayQuantizationParams(bool quantize_weights, bool quantize_activations);
-  void DisableQuantization(bool quantize_weights, bool quantize_activations);
-  template <typename Dtype> void Convert2FixedPoint_cpu(Dtype* data, const int cnt, const int bw, int fl, bool unsigned_data, bool clip) const;
-  void AddQuantizationParams();
+  void SetQuantizationParamsLayerWeights(const int layer_id);
+  void SetQuantizationParamsLayerInput(const int layer_id);
+  void SetQuantizationParamsLayerOutput(const int layer_id);
+  void SetQuantizationParams();
+  void DisplayQuantizationParams();
+  void DisableQuantization();
+
+  template <typename Dtype> void Convert2FixedPoint_cpu(Dtype* data, const int cnt,
+      const int bw, int fl, bool unsigned_data, bool clip) const;
 
   int EstimateAbsBits(float val);
-  int GetIntegerLengthWeights(const int layer_id, float& min_layer_weights, float& max_layer_weights);
-  int GetIntegerLengthIn(const int layer_id, const int blob_id, bool unsigned_check_in,
-		  bool& unsigned_layer_in, float& min_layer_in, float& max_layer_in);
-  int GetIntegerLengthOut(const int layer_id, bool unsigned_check_out,
-		  bool& unsigned_layer_out, float& min_layer_out, float& max_layer_out);  
+  void EstiamteQScaleParams(float min, float max, int bitwidth, bool power2_quant,
+      bool unsigned_data, bool force_unsigned_quant, QuantizationParameter::QParams& qparam_xx);
 
   //Sparsity
   int GetSparsity(std::map<std::string, std::pair<int,int> >& sparsity_map);
