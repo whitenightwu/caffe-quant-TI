@@ -116,7 +116,7 @@ namespace caffe {
     if (iter0 && this->net_inititialized_flag_ != nullptr) {
       this->net_inititialized_flag_->wait();
     } else {  // nothing to wait -> initialize and start pumping
-      std::lock_guard<std::mutex> lock(this->mutex_in_);
+      //std::lock_guard<std::mutex> lock(this->mutex_in_);
       this->InitializePrefetch();
       start_reading();
       iter0 = false;
@@ -150,7 +150,7 @@ namespace caffe {
           if (this->net_iteration0_flag_ != nullptr) {
             this->net_iteration0_flag_->wait();
           }
-          std::lock_guard<std::mutex> lock(this->mutex_out_);
+          //std::lock_guard<std::mutex> lock(this->mutex_out_);
           if (this->net_inititialized_flag_ != nullptr) {
             this->net_inititialized_flag_ = nullptr;  // no wait on the second round
             this->InitializePrefetch();
