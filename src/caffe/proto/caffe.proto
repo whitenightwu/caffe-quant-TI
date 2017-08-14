@@ -100,7 +100,8 @@ message QuantizationParameter {
   optional QuantizationParameter_Precision precision = 1 [default = QuantizationParameter_Precision_DYNAMIC_FIXED_POINT];  
   optional QuantizationParameter_Rounding rounding_scheme = 2 [default = QuantizationParameter_Rounding_NEAREST];
   optional bool power2_range = 3 [default = false];
-      
+  optional int32 quantized_infer_count = 4 [ default = 0];
+        
   // Dynamic fixed point params
   message QParams {
     optional bool quantize = 1 [default = false];  
@@ -113,9 +114,9 @@ message QuantizationParameter {
     optional float min = 9 [default = 0];
     optional float max = 10 [default = 0];    
   }
-  repeated QParams qparam_in = 4;
-  optional QParams qparam_out = 5;
-  optional QParams qparam_w = 6;
+  repeated QParams qparam_in = 5;
+  optional QParams qparam_out = 6;
+  optional QParams qparam_w = 7;
 }
 
 // Quantization params for the net  
@@ -130,7 +131,9 @@ message NetQuantizationParameter {
   optional QuantizationParameter_Precision precision = 2 [default = QuantizationParameter_Precision_DYNAMIC_FIXED_POINT];  
   optional QuantizationParameter_Rounding rounding_scheme = 3 [default = QuantizationParameter_Rounding_NEAREST];  
   optional uint32 bitwidth_activations = 4 [default = 8];
-  optional uint32 bitwidth_weights = 5 [default = 8];
+  
+  //8-bits doesn't seem to be working for classification if previous frame's range is used.  
+  optional uint32 bitwidth_weights = 5 [default = 12];
         
   optional bool quantize_weights = 8 [default = true];
   optional bool quantize_activations = 9 [default = true];   

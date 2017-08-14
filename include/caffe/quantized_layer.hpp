@@ -18,10 +18,6 @@
 
 namespace caffe {
 
-//If BN shares the blob with conv output, the clipping may have to be implemented differently.
-//Disable it for the time being.
-#define CLIP_QUANT 1
-
 template<typename Ftype, typename Btype>
 class QuantizedLayer : public Layer<Ftype, Btype> {
 public:
@@ -34,8 +30,8 @@ public:
   void QuantizeLayerInputs_cpu(Ftype* data, const int blob_id, const int count);
   void QuantizeLayerOutputs_gpu(Ftype* data, const int count);
   void QuantizeLayerInputs_gpu(Ftype* data, const int blob_id, const int count);
-  void QuantizeWeights_cpu(Ftype* data, const int count, const int rounding, bool clip);
-  void QuantizeWeights_gpu(Ftype* data, const int count, const int rounding, bool clip);
+  void QuantizeWeights_cpu(Ftype* data, const int count, bool clip);
+  void QuantizeWeights_gpu(Ftype* data, const int count, bool clip);
 
   /**
    * @brief Trim data to fixed point.

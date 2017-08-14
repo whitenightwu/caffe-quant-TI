@@ -19,12 +19,12 @@ void QuantizedLayer<Ftype, Btype>::Quantize_gpu(const vector<Blob*>& bottom,
         }
       }
 
-      // Trim weights
-      if(param.qparam_w().quantize() && blobs.size() > 0) {
-        this->QuantizeWeights_gpu(blobs[0]->mutable_gpu_data<Ftype>(), blobs[0]->count(), param.rounding_scheme(), true);
-        if (blobs.size() > 1) { //(this->bias_term_) {
-          this->QuantizeWeights_gpu(blobs[1]->mutable_gpu_data<Ftype>(), blobs[1]->count(), param.rounding_scheme(), false);
-        }
+      // Trim weights - do it only at the start of quantization
+      if(param.qparam_w().quantize() && blobs.size() > 0 && param.quantized_infer_count() == 0) {
+        this->QuantizeWeights_gpu(blobs[0]->mutable_gpu_data<Ftype>(), blobs[0]->count(), true);
+        //if (blobs.size() > 1) { //(this->bias_term_) {
+        //  this->QuantizeWeights_gpu(blobs[1]->mutable_gpu_data<Ftype>(), blobs[1]->count(), false);
+        //}
       }
 
       // Trim layer output
@@ -39,7 +39,7 @@ void QuantizedLayer<Ftype, Btype>::Quantize_gpu(const vector<Blob*>& bottom,
 
 
 template<typename Ftype, typename Btype>
-void QuantizedLayer<Ftype, Btype>::QuantizeWeights_gpu(Ftype* data, const int count, const int rounding, bool clip) {
+void QuantizedLayer<Ftype, Btype>::QuantizeWeights_gpu(Ftype* data, const int count, bool clip) {
   const QuantizationParameter& param = this->layer_param_.quantization_param();
   const QuantizationParameter::QParams& qparam_w = param.qparam_w();
   switch (param.precision()) {
@@ -99,7 +99,7 @@ __global__ void Trim2FixedPoint_kernel(Dtype* data, const int cnt,
     const int bitwidth, const int rounding, float scale, float inv_scale, float offset, float min_data, float max_data, bool clip) {
     CUDA_KERNEL_LOOP(index, cnt) {
 
-    data[index] = data[index] * scale + offset;
+    data[index] = (data[index] * scale) + offset;
 
     // Round data
     switch (rounding) {
@@ -113,13 +113,11 @@ __global__ void Trim2FixedPoint_kernel(Dtype* data, const int cnt,
       break;
     }
 
-#if CLIP_QUANT
+    // Saturate data
     if(clip) {
-        // Saturate data
-        data[index] = (data[index]>(Dtype)max_data?
-            (Dtype)max_data:(data[index]<(Dtype)min_data?(Dtype)min_data:data[index]));
+      data[index] = (data[index]>(Dtype)max_data? (Dtype)max_data:
+        (data[index]<(Dtype)min_data?(Dtype)min_data:data[index]));
     }
-#endif
 
     data[index] = (data[index] - offset) * inv_scale;
   }
@@ -128,17 +126,11 @@ __global__ void Trim2FixedPoint_kernel(Dtype* data, const int cnt,
 
 template<typename Ftype, typename Btype>
 void QuantizedLayer<Ftype, Btype>::Trim2FixedPoint_gpu(Ftype* data, const int cnt, bool power2_range,
-      const int bitwidth, const int rounding, int fracbits, float scale, float offset, bool unsigned_data, bool clip) {
-  float inv_scale;
-  if(power2_range) {
-    scale = powf(2, fracbits);
-    inv_scale = powf(2, -fracbits);
-  } else {
-    inv_scale = 1.0f/scale;
-  }
+      const int bitwidth, const int rounding, int fracbits, float scale, float offset, bool unsigned_quant, bool clip) {
+  float inv_scale = 1.0f/scale;
 
-  int qrange = unsigned_data? bitwidth :  (bitwidth - 1);
-  float min_data = unsigned_data? 0 : -(powf(2, qrange));
+  int qrange = unsigned_quant? bitwidth :  (bitwidth - 1);
+  float min_data = unsigned_quant? 0 : -(powf(2, qrange));
   float max_data = +(powf(2, qrange) - 1);
 
   Trim2FixedPoint_kernel<<<CAFFE_GET_BLOCKS(cnt), CAFFE_CUDA_NUM_THREADS>>>(

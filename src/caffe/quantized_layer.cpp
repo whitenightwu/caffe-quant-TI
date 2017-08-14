@@ -24,12 +24,12 @@ void QuantizedLayer<Ftype, Btype>::Quantize_cpu(const vector<Blob*>& bottom, con
         }
       }
 
-      // Trim weights
-      if(param.qparam_w().quantize() && blobs.size() > 0) {
-        this->QuantizeWeights_cpu(blobs[0]->mutable_cpu_data<Ftype>(), blobs[0]->count(), param.rounding_scheme(), true);
-        if (blobs.size() > 1) { //if (this->bias_term_) {
-          this->QuantizeWeights_cpu(blobs[1]->mutable_cpu_data<Ftype>(), blobs[1]->count(), param.rounding_scheme(), false);
-        }
+      // Trim weights - do it only at the start of quantization
+      if(param.qparam_w().quantize() && blobs.size() > 0 && param.quantized_infer_count() == 0) {
+        this->QuantizeWeights_cpu(blobs[0]->mutable_cpu_data<Ftype>(), blobs[0]->count(), true);
+        //if (blobs.size() > 1) { //if (this->bias_term_) {
+        //  this->QuantizeWeights_cpu(blobs[1]->mutable_cpu_data<Ftype>(), blobs[1]->count(), false);
+        //}
       }
 
       // Trim layer output
@@ -44,7 +44,7 @@ void QuantizedLayer<Ftype, Btype>::Quantize_cpu(const vector<Blob*>& bottom, con
 
 
 template<typename Ftype, typename Btype>
-void QuantizedLayer<Ftype, Btype>::QuantizeWeights_cpu(Ftype* data, const int count, const int rounding, bool clip) {
+void QuantizedLayer<Ftype, Btype>::QuantizeWeights_cpu(Ftype* data, const int count, bool clip) {
   const QuantizationParameter& param =  this->layer_param_.quantization_param();
   const QuantizationParameter::QParams& qparam_w = param.qparam_w();
   switch (param.precision()) {
@@ -102,26 +102,20 @@ void QuantizedLayer<Ftype, Btype>::QuantizeLayerOutputs_cpu(
 template<typename Ftype, typename Btype>
 void QuantizedLayer<Ftype, Btype>::Trim2FixedPoint_cpu(Ftype* data, const int cnt, bool power2_range, const int bitwidth,
     const int rounding, int fracbits, float scale, float offset, bool unsigned_quant, bool clip) {
-  float inv_scale;
-  if(power2_range) {
-    scale = powf(2, fracbits);
-    inv_scale = powf(2, -fracbits);
-  } else {
-    inv_scale = 1.0f/scale;
-  }
+  float inv_scale = 1.0f/scale;
+
   int qrange = unsigned_quant? bitwidth :  (bitwidth - 1);
   Ftype max_data = +(powf(2, qrange) - 1);
   Ftype min_data = unsigned_quant? 0 : -(powf(2, qrange));
 
   for (int index = 0; index < cnt; ++index) {
-    data[index] = data[index] * scale + offset;
+    data[index] = (data[index] * scale) + offset;
 
     // Saturate data
-#if CLIP_QUANT
-      if(clip) {
-        data[index] = std::max(std::min(data[index], max_data), min_data);
-      }
-#endif
+    if(clip) {
+      data[index] = std::max(std::min(data[index], max_data), min_data);
+    }
+
     // Round data
     switch (rounding) {
     case QuantizationParameter_Rounding_NEAREST:
