@@ -123,7 +123,6 @@ class Net {
   void ToProto(NetParameter* param, bool write_diff = false) const;
   /// @brief Writes the net to an HDF5 file.
   void ToHDF5(const string& filename, bool write_diff = false) const;
-  void ToProtoLog(NetLogParameter* param, bool write_diff = false) const;
 
   /// @brief returns the network name.
   const string& name() const { return name_; }

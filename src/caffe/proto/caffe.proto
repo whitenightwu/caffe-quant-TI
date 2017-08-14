@@ -40,15 +40,6 @@ message BlobProtoVector {
   repeated BlobProto blobs = 1;
 }
 
-message BlobProtoLog {
-	optional string name = 1 [default = ''];
-	optional bool is_quantized = 2 [default = false];
-	optional bool unsigned_data = 3 [default = false];	
-	optional int32 bw = 4 [default = 0];
-	optional int32 fl = 5 [default = 0];
-	optional BlobProto blob_data = 6;
-}
-
 message Datum {
   optional int32 channels = 1;
   optional int32 height = 2;
@@ -211,14 +202,6 @@ message NetParameter {
   
   optional bool quantize = 200 [default = false];  
   optional NetQuantizationParameter net_quantization_param = 201;  
-}
-
-message NetLogParameter {
-  optional string name = 1; // consider giving the network a name
-  // The layers that make up the net.  Each of their configurations, including
-  // connectivity and behavior, is specified as a LayerParameter.
-  repeated LayerParameter layer = 100;  // ID 100 so layers are printed last.
-  repeated BlobProtoLog blob_log = 101;  // ID 101 so additional blobs are printed last.  
 }
 
 // Specifies how to deal with connections whose weights are recovered/initialized as zeros. 
