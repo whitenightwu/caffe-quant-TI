@@ -383,7 +383,7 @@ message SolverParameter {
   optional bool store_blobs_in_old_format = 45 [default = false];
 
   // Ignore mismatching blobs and continue while loading weights
-  optional bool ignore_mismatching_blobs = 150 [default = false];
+  optional bool ignore_shape_mismatch = 150 [default = true];
     
   // Wite additional snapshot in txt format
   optional bool snapshot_log = 151 [default = false];

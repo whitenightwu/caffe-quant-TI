@@ -1069,7 +1069,7 @@ void Net::CopyTrainedLayersFrom(const NetParameter& param) {
     const LayerParameter& source_layer = param.layer(i);
     const string& source_layer_name = source_layer.name();
     const string& source_layer_type = source_layer.type();
-    const bool ignore_mismatching_blobs = ((solver_!=NULL) && solver_->param().ignore_mismatching_blobs());	
+    const bool ignore_shape_mismatch = ((solver_==NULL) || solver_->param().ignore_shape_mismatch());
     int target_layer_id = 0;
     while (target_layer_id != layer_names_.size() &&
         layer_names_[target_layer_id] != source_layer_name) {
@@ -1083,7 +1083,7 @@ void Net::CopyTrainedLayersFrom(const NetParameter& param) {
     vector<shared_ptr<Blob> >& target_blobs =
         layers_[target_layer_id]->blobs();
     if (target_blobs.size() != source_layer.blobs_size()) {
-	  if(source_layer_type == "BatchNorm" && ignore_mismatching_blobs) {
+	  if(source_layer_type == "BatchNorm" && ignore_shape_mismatch) {
         LOG(WARNING) << "Incompatible number of blobs for layer " << source_layer_name 
 	        << " target(" << target_blobs.size() << ") vs source(" << source_layer.blobs_size() << ")";	
 	  } else {	
@@ -1128,16 +1128,14 @@ void Net::CopyTrainedLayersFrom(const NetParameter& param) {
           source_blob->FromProto(source_layer.blobs(j), kReshape);
 
 		  //Shape doesn't match. Check if atleast size matches.
-          if(target_blobs[j]->count() == source_blob->count() && ignore_mismatching_blobs) {
-            LOG(WARNING) << "Ignoring copy param " << j << " weights from layer '"
-                << source_layer_name << "'; shape mismatch.  Source param shape is "
+          if(target_blobs[j]->count() == source_blob->count() && ignore_shape_mismatch) {
+            LOG(WARNING) << "During copy param " << j << " weights from layer '"
+                << source_layer_name << "'; Ignoring shape mismatch and copying forcefully.  Source param shape is "
                 << source_blob->shape_string() << "; target param shape is "
-                << target_blobs[j]->shape_string() << ". "
-                << "To learn this layer's parameters from scratch rather than "
-                << "copying from a saved net, rename the layer.";
+                << target_blobs[j]->shape_string() << ". ";
 						  
             const bool kReshape = false;
-            target_blobs[j]->FromProto(source_layer.blobs(j), kReshape, ignore_mismatching_blobs);
+            target_blobs[j]->FromProto(source_layer.blobs(j), kReshape, ignore_shape_mismatch);
 		  }	 else {
             LOG(ERROR) << "Cannot copy param " << j << " weights from layer '"
                 << source_layer_name << "'; shape mismatch.  Source param shape is "
