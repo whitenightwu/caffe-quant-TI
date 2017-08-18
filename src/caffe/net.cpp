@@ -1842,10 +1842,10 @@ int Net::EstimateAbsBits(float val) {
 }
 
 void Net::EstiamteQScaleParams(float min, float max, int bitwidth, bool power2_range,
-    bool unsigned_data, bool force_unsigned_quant, QuantizationParameter::QParams& qparam_xx) {
+    bool unsigned_data, bool apply_offset, QuantizationParameter::QParams& qparam_xx) {
   qparam_xx.set_bitwidth(bitwidth);
   qparam_xx.set_unsigned_data(unsigned_data);
-  qparam_xx.set_unsigned_quant(unsigned_data || force_unsigned_quant);
+  qparam_xx.set_unsigned_quant(unsigned_data || apply_offset);
   qparam_xx.set_min(min);
   qparam_xx.set_max(max);
 
@@ -1853,26 +1853,26 @@ void Net::EstiamteQScaleParams(float min, float max, int bitwidth, bool power2_r
   float max_val_range = std::abs(max - min);
 
   if(power2_range) {
-    int estimated_bits = force_unsigned_quant? EstimateAbsBits(max_val_range) :
+    int estimated_bits = apply_offset? EstimateAbsBits(max_val_range) :
         (unsigned_data? EstimateAbsBits(max_val_abs) : (EstimateAbsBits(max_val_abs)+1));
     int fracbits = bitwidth - estimated_bits;
     qparam_xx.set_fracbits(fracbits);
 
     float scale = float((1<<fracbits));
     qparam_xx.set_scale(scale);
-    qparam_xx.set_offset(force_unsigned_quant? (0 - min * scale) : 0);
+    qparam_xx.set_offset(apply_offset? (0 - min * scale) : 0);
   } else {
     //Tried to use 256 instead of 255, for power2_range == false, But it did not work!!!
     //We clip the quantized output - so this should not be an issue.
     //The hope was that using 256 will allow us to reverse the quantization better.
     float max_qrange = ((1L<<bitwidth)-1);
     float max_qrange_half = ((1L<<(bitwidth-1))-1);
-    float scale = force_unsigned_quant? max_qrange/max_val_range :
+    float scale = apply_offset? max_qrange/max_val_range :
         (unsigned_data? max_qrange/max_val_abs : max_qrange_half/max_val_abs);
     qparam_xx.set_scale(scale);
 
     qparam_xx.set_fracbits(0); //fracbits is not integer - so cannot set.
-    qparam_xx.set_offset(force_unsigned_quant? (0 - min * scale) : 0);
+    qparam_xx.set_offset(apply_offset? (0 - min * scale) : 0);
   }
 }
 
@@ -1893,7 +1893,7 @@ void Net::SetQuantizationParamsLayerInput(const int layer_id) {
 
     QuantizationParameter::QParams& qparam_in = *quantization_param.mutable_qparam_in(blob_id);
     EstiamteQScaleParams(min_layer, max_layer, net_qparam.bitwidth_activations(),
-        net_qparam.power2_range(), unsigned_data, net_qparam.force_unsigned_quant_activations(), qparam_in);
+        net_qparam.power2_range(), unsigned_data, net_qparam.apply_offset_activations(), qparam_in);
   }
 }
 
@@ -1907,7 +1907,7 @@ void Net::SetQuantizationParamsLayerOutput(const int layer_id) {
 
   QuantizationParameter::QParams& qparam_out = *quantization_param.mutable_qparam_out();
   EstiamteQScaleParams(min_layer, max_layer, net_qparam.bitwidth_activations(),
-      net_qparam.power2_range(), unsigned_data, net_qparam.force_unsigned_quant_activations(), qparam_out);
+      net_qparam.power2_range(), unsigned_data, net_qparam.apply_offset_activations(), qparam_out);
 
 
   int fracbits_in = quantization_param.qparam_in(0).fracbits();
@@ -1939,7 +1939,7 @@ void Net::SetQuantizationParamsLayerWeights(const int layer_id) {
 
     QuantizationParameter::QParams& qparam_w = *quantization_param.mutable_qparam_w();
     EstiamteQScaleParams(min_layer, max_layer, net_qparam.bitwidth_weights(),
-        net_qparam.power2_range(), unsigned_data, net_qparam.force_unsigned_quant_weights(), qparam_w);
+        net_qparam.power2_range(), unsigned_data, net_qparam.apply_offset_weights(), qparam_w);
   }
 }
 

@@ -141,9 +141,9 @@ message NetQuantizationParameter {
   optional int32 display_quantization = 10 [default = 2000];
   optional bool insert_quantization_param = 11 [default = true];
     
-  //apply offset to make quantized range unsigned.
-  optional bool force_unsigned_quant_activations = 13 [default = false];
-  optional bool force_unsigned_quant_weights = 14 [default = true];
+  //apply offset to make quantized range unsigned and optimal.
+  optional bool apply_offset_activations = 13 [default = false];
+  optional bool apply_offset_weights = 14 [default = true];
 }
 
 

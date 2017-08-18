@@ -303,7 +303,7 @@ class Net {
 
   int EstimateAbsBits(float val);
   void EstiamteQScaleParams(float min, float max, int bitwidth, bool power2_quant,
-      bool unsigned_data, bool force_unsigned_quant, QuantizationParameter::QParams& qparam_xx);
+      bool unsigned_data, bool apply_offset, QuantizationParameter::QParams& qparam_xx);
 
   //Sparsity
   int GetSparsity(std::map<std::string, std::pair<int,int> >& sparsity_map);
