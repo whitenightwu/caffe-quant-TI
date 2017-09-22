@@ -916,6 +916,45 @@ int Blob::count_zero(float threshold, const int start_index, const int count) co
 	}
 }
 
+int Blob::count_zero_connectivity(float threshold, const int start_index, const int count) const {
+    if(!connectivity_) {
+      return 0;
+    }
+
+    const shared_ptr<SyncedMemory>& data_mem = data_tensor_->synced_mem();
+    const shared_ptr<SyncedMemory>& connectivity_mem = connectivity_->synced_mem();
+    if ((!data_mem) || (!connectivity_mem)) {
+        return 0;
+    }
+
+    int n = count? count : this->count();
+
+    // We will perform update based on where the data is located.
+    switch (data_mem->head()) {
+    case SyncedMemory::HEAD_AT_CPU:
+    {
+        // perform computation on CPU
+        int zero_num = cpu_count_zero(n, data_type(), connectivity_mem->cpu_data(), threshold, start_index);
+        return zero_num;
+    }
+    case SyncedMemory::HEAD_AT_GPU:
+    case SyncedMemory::SYNCED:
+    {
+#ifndef CPU_ONLY
+        // perform computation on GPU
+        int zero_num = gpu_count_zero(n, data_type(), connectivity_mem->gpu_data(), threshold, start_index);
+        return zero_num;
+#else
+        NO_GPU;
+#endif
+        return 0;
+    }
+    default:
+        LOG(WARNING)<< "Syncedmem not initialized.";
+        return 0;
+    }
+}
+
 void Blob::cpu_set(int count, Type dtype, void* X, float val) {
   if (is_type<float>(dtype)) {
     caffe::caffe_set(count, (float)val, static_cast<float*>(X));

@@ -558,6 +558,7 @@ class Blob {
   int gpu_count_zero(int count, Type dtype, const void* X, float threshold, const int start_index) const;
 #endif
   int count_zero(float threshold, const int start_index, const int count) const;
+  int count_zero_connectivity(float threshold, const int start_index, const int count) const;
 
   void cpu_if_nonzero(int count, Type dtype, const void* X, void* Y) const;
 #ifndef CPU_ONLY

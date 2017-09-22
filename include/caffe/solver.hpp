@@ -169,7 +169,8 @@ class Solver {
 public:
   void StoreSparseModeConnectivity();
   void ThresholdNet();
-  void DisplaySparsity();
+  float DisplaySparsity(bool verbose);
+  float DisplayConnectivitySparsity(bool verbose);
   
 protected:
   const SolverParameter param_;

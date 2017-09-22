@@ -307,13 +307,15 @@ class Net {
 
   //Sparsity
   int GetSparsity(std::map<std::string, std::pair<int,int> >& sparsity_map);
+  int GetConnectivitySparsity(std::map<std::string, std::pair<int,int> >& sparsity_map);
   void FindAndApplyThresholdNet(float threshold_fraction_low, float threshold_fraction_mid, float threshold_fraction_high,
       float threshold_value_maxratio, float threshold_value, float threshold_step_factor, bool verbose = true);
   void FindAndApplyChannelThresholdNet(float threshold_fraction_low, float threshold_fraction_mid, float threshold_fraction_high,
       float threshold_value_maxratio, float threshold_value, float threshold_step_factor, bool verbose = true);
   void ApplySparseModeConnectivity();  
   void StoreSparseModeConnectivity(SparseMode mode);
-  void DisplaySparsity();
+  float DisplaySparsity(bool verbose);
+  float DisplayConnectivitySparsity(bool verbose);
   
   //Batch Norm  Optimization
   template <typename Dtype> void OptimizeNet();

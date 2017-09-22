@@ -52,6 +52,7 @@ DEFINE_string(ap_version, "11point",
     "Average Precision type for object detection");
 DEFINE_bool(show_per_class_result, true,
     "Show per class result for object detection");
+DEFINE_bool(display_sparsity, false, "Display the amount of sparsity");
 
 DEFINE_double(threshold_fraction_low, 0.40, "Optional: fraction of weights to be zeroed");
 DEFINE_double(threshold_fraction_mid, 0.80, "Optional: fraction of weights to be zeroed");
@@ -334,6 +335,13 @@ int test() {
     }
     LOG(INFO) << output_name << " = " << mean_score << loss_msg_stream.str();
   }
+
+  if(FLAGS_display_sparsity) {
+    LOG(INFO) << "=========================";
+    LOG(INFO) << "Sparsity of the test net:";
+    caffe_net.DisplaySparsity(true);
+    LOG(INFO) << "=========================";
+  }
   return 0;
 }
 RegisterBrewFunction(test);
@@ -513,6 +521,12 @@ int test_detection() {
               << mAP;	
   }  
   
+  if(FLAGS_display_sparsity) {
+    LOG(INFO) << "=========================";
+    LOG(INFO) << "Sparsity of the test net:";
+    caffe_net.DisplaySparsity(true);
+    LOG(INFO) << "=========================";
+  }
   return 0;
 }
 RegisterBrewFunction(test_detection);
@@ -744,7 +758,7 @@ int threshold() {
   LOG(INFO) << "Thresholding Net " << FLAGS_model;
   caffe_net.FindAndApplyThresholdNet(FLAGS_threshold_fraction_low, FLAGS_threshold_fraction_mid, FLAGS_threshold_fraction_high,
       FLAGS_threshold_value_maxratio, FLAGS_threshold_value_max, FLAGS_threshold_step_factor);
-  caffe_net.DisplaySparsity();
+  caffe_net.DisplaySparsity(true);
 
   boost::filesystem::path output_path(FLAGS_output);
   string output_prefix = output_path.parent_path().string() + "/" + output_path.stem().string();

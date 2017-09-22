@@ -880,7 +880,6 @@ void Net::ReduceAndUpdate() {
       id_from = id_to = -1;
       au_ids.clear();
 #endif
-      solver_->ThresholdNet();
       solver_->iteration_complete_signal();
     }
   }
@@ -1153,29 +1152,6 @@ void Net::CopyTrainedLayersFrom(const NetParameter& param) {
     }
   }
   CopyQuantizationRangeInLayers();    
-}
-
-int Net::GetSparsity(std::map<std::string, std::pair<int,int> >& sparsity_map){
-  int blob_count = 0;
-  float threshold = 0.0f;
-  sparsity_map.clear();
-  int max_params_to_check = 1;
-  for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {	
-      const LayerParameter& layer_param = layers_[layer_id]->layer_param();  
-      if(layer_param.type() == "Convolution" || layer_param.type() == "InnerProduct") {
-          int num_params_to_check = std::min<int>(max_params_to_check, layers_[layer_id]->blobs().size());
-		  for (int param_id = 0; param_id < num_params_to_check;++param_id) {
-		    const Blob& blob = *layers_[layer_id]->blobs()[param_id];
-		    const int net_param_id = param_id_vecs_[layer_id][param_id];
-		    const string& blob_name = param_display_names_[net_param_id];
-		    //const Dtype data_abs_val_mean = blob.asum_data() / blob.count();
-		    std::pair<int,int> sp_map = std::make_pair(blob.count_zero(threshold, 0, 0), blob.count());
-		    sparsity_map[layer_names_[layer_id] + "_param_" + blob_name] = sp_map;
-			blob_count++;
-		  }	
-	  }
-  }
-  return blob_count;
 }
 
 void Net::CopyTrainedLayersFrom(const string trained_filename) {
@@ -2002,7 +1978,7 @@ void Net::DisableQuantization() {
 }
 
 
-
+//Old, deprecated function.
 void Net::FindAndApplyThresholdNet(float threshold_fraction_low, float threshold_fraction_mid, float threshold_fraction_high,
     float threshold_value_maxratio, float threshold_value_max, float threshold_step_factor, bool verbose) {
 
@@ -2020,7 +1996,7 @@ void Net::FindAndApplyThresholdNet(float threshold_fraction_low, float threshold
 	    LOG(WARNING) << layers_[i]->layer_param().name() << " ni=" << ni << " no=" << no;
       }
 
-	  if(ni>=32 || no >= 32) {
+	  if((ni>=32 || no >= 32) && num_group<no) {
 	    float threshold_fraction_selected = ((ni>=256 && no >= 512)? threshold_fraction_high :
 	        ((ni>=32 && no >= 32)? threshold_fraction_mid: threshold_fraction_low));
 	    float selected_threshold = 0;
@@ -2098,7 +2074,9 @@ void Net::FindAndApplyChannelThresholdNet(float threshold_fraction_low, float th
         LOG(WARNING) << layers_[i]->layer_param().name() << " ni=" << ni << " no=" << no;
       }
 
-      if(ni>=32 || no >= 32) {
+      //apply sparsity only to certain layers. exclude layers with small number of input and outputs
+      //also exclude depth-wise separable layers.
+      if((ni>=32 || no >= 32)  && num_group<no) {
         float threshold_fraction_selected = ((ni>=256 && no >= 512)? threshold_fraction_high :
             ((ni>=32 && no >= 32)? threshold_fraction_mid: threshold_fraction_low));
 
@@ -2165,6 +2143,9 @@ void Net::ApplySparseModeConnectivity() {
 
       //Use the connectivity information in the blob and zerout values accordingly.
       conv_weights.ComputeSparseData();
+
+      //This is strictly not necessary
+      //conv_weights.ComputeSparseDiff();
     }
   }
 }
@@ -2184,11 +2165,45 @@ void Net::StoreSparseModeConnectivity(SparseMode mode) {
   }
 }
 
-void Net::DisplaySparsity() {
-  std::map<std::string, std::pair<int,int> > spasity_map;
-  int blob_count = this->GetSparsity(spasity_map);
-  LOG(INFO) << "Num Params(" << blob_count << "), " << "Sparsity (zero_weights/count): ";
+float Net::DisplaySparsity(bool verbose) {
   float total_zero_count = 0, total_count = 0;
+  {
+    std::map<std::string, std::pair<int,int> > spasity_map;
+    int blob_count = this->GetSparsity(spasity_map);
+    if(verbose) {
+      LOG(INFO) << "Num Params(" << blob_count << "), " << "Sparsity (zero_weights/count): ";
+    }
+
+    for(std::map<std::string, std::pair<int,int> >::iterator
+        iter = spasity_map.begin(); iter != spasity_map.end(); iter++) {
+      std::string param_name = iter->first;
+      float zero_count = iter->second.first;
+      float count = iter->second.second;
+      total_zero_count += zero_count;
+      total_count += count;
+      if(verbose) {
+        LOG(INFO) << param_name << "(" << std::setprecision(3) << (zero_count/count) << ") ";
+      }
+    }
+    if(verbose) {
+      LOG(INFO) << "Total Sparsity (zero_weights/count) = "
+          << " (" << total_zero_count << "/" << total_count << ") "
+          << std::setprecision(3) << (total_zero_count/total_count);
+    }
+  }
+
+  return (total_zero_count/total_count);
+}
+
+float Net::DisplayConnectivitySparsity(bool verbose) {
+  float total_zero_count = 0, total_count = 0;
+
+  std::map<std::string, std::pair<int,int> > spasity_map;
+  int blob_count = this->GetConnectivitySparsity(spasity_map);
+  if(verbose) {
+    LOG(INFO) << "Num Params(" << blob_count << "), " << "ConnectivitySparsity (zero_weights/count): ";
+  }
+
   for(std::map<std::string, std::pair<int,int> >::iterator
       iter = spasity_map.begin(); iter != spasity_map.end(); iter++) {
     std::string param_name = iter->first;
@@ -2196,10 +2211,62 @@ void Net::DisplaySparsity() {
     float count = iter->second.second;
     total_zero_count += zero_count;
     total_count += count;
-    LOG(INFO) << param_name << "(" << std::setprecision(3) << (zero_count/count) << ") ";
+    if(verbose) {
+      LOG(INFO) << param_name << "(" << std::setprecision(3) << (zero_count/count) << ") ";
+    }
   }
-  LOG(INFO) << "Total Sparsity (zero_weights/count) = " << " (" << total_zero_count << "/" << total_count << ") "
-      << std::setprecision(3) << (total_zero_count/total_count);
+  if(verbose) {
+    LOG(INFO) << "Total ConnectivitySparsity (zero_weights/count) = "
+        << " (" << total_zero_count << "/" << total_count << ") "
+        << std::setprecision(3) << (total_zero_count/total_count);
+  }
+
+  return (total_zero_count/total_count);
+}
+
+int Net::GetSparsity(std::map<std::string, std::pair<int,int> >& sparsity_map){
+  int blob_count = 0;
+  float threshold = 0.0f;
+  sparsity_map.clear();
+  int max_params_to_check = 1;
+  for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
+      const LayerParameter& layer_param = layers_[layer_id]->layer_param();
+      if(layer_param.type() == "Convolution" || layer_param.type() == "InnerProduct") {
+          int num_params_to_check = std::min<int>(max_params_to_check, layers_[layer_id]->blobs().size());
+          for (int param_id = 0; param_id < num_params_to_check;++param_id) {
+            const Blob& blob = *layers_[layer_id]->blobs()[param_id];
+            const int net_param_id = param_id_vecs_[layer_id][param_id];
+            const string& blob_name = param_display_names_[net_param_id];
+            //const Dtype data_abs_val_mean = blob.asum_data() / blob.count();
+            std::pair<int,int> sp_map = std::make_pair(blob.count_zero(threshold, 0, 0), blob.count());
+            sparsity_map[layer_names_[layer_id] + "_param_" + blob_name] = sp_map;
+            blob_count++;
+          }
+      }
+  }
+  return blob_count;
+}
+int Net::GetConnectivitySparsity(std::map<std::string, std::pair<int,int> >& sparsity_map){
+  int blob_count = 0;
+  float threshold = 0.0f;
+  sparsity_map.clear();
+  int max_params_to_check = 1;
+  for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
+      const LayerParameter& layer_param = layers_[layer_id]->layer_param();
+      if(layer_param.type() == "Convolution" || layer_param.type() == "InnerProduct") {
+          int num_params_to_check = std::min<int>(max_params_to_check, layers_[layer_id]->blobs().size());
+          for (int param_id = 0; param_id < num_params_to_check;++param_id) {
+            const Blob& blob = *layers_[layer_id]->blobs()[param_id];
+            const int net_param_id = param_id_vecs_[layer_id][param_id];
+            const string& blob_name = param_display_names_[net_param_id];
+            //const Dtype data_abs_val_mean = blob.asum_data() / blob.count();
+            std::pair<int,int> sp_map = std::make_pair(blob.count_zero_connectivity(threshold, 0, 0), blob.count());
+            sparsity_map[layer_names_[layer_id] + "_param_" + blob_name] = sp_map;
+            blob_count++;
+          }
+      }
+  }
+  return blob_count;
 }
 
 template void Net::Convert2FixedPoint_cpu(float* data, const int cnt, const int bw, int fl, bool unsigned_data, bool clip) const;
