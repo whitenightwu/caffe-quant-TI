@@ -2231,7 +2231,16 @@ int Net::GetSparsity(std::map<std::string, std::pair<int,int> >& sparsity_map){
   int max_params_to_check = 1;
   for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
       const LayerParameter& layer_param = layers_[layer_id]->layer_param();
-      if(layer_param.type() == "Convolution" || layer_param.type() == "InnerProduct") {
+
+      bool next_layer_is_softmax = false;
+      if((layer_id+1) < layers_.size() && (layers_[layer_id+1]->layer_param().type() == "Softmax" ||
+          layers_[layer_id+1]->layer_param().type() == "SoftmaxWithLoss")) {
+        next_layer_is_softmax = true;
+      }
+      bool next_layer_is_not_softmax = (!next_layer_is_softmax);
+      bool is_candidate_layer = (layer_param.type() == "Convolution" /*|| layer_param.type() == "InnerProduct"*/);
+
+      if(next_layer_is_not_softmax && is_candidate_layer)  {
           int num_params_to_check = std::min<int>(max_params_to_check, layers_[layer_id]->blobs().size());
           for (int param_id = 0; param_id < num_params_to_check;++param_id) {
             const Blob& blob = *layers_[layer_id]->blobs()[param_id];
@@ -2246,6 +2255,7 @@ int Net::GetSparsity(std::map<std::string, std::pair<int,int> >& sparsity_map){
   }
   return blob_count;
 }
+
 int Net::GetConnectivitySparsity(std::map<std::string, std::pair<int,int> >& sparsity_map){
   int blob_count = 0;
   float threshold = 0.0f;
@@ -2253,7 +2263,16 @@ int Net::GetConnectivitySparsity(std::map<std::string, std::pair<int,int> >& spa
   int max_params_to_check = 1;
   for (int layer_id = 0; layer_id < layers_.size(); ++layer_id) {
       const LayerParameter& layer_param = layers_[layer_id]->layer_param();
-      if(layer_param.type() == "Convolution" || layer_param.type() == "InnerProduct") {
+
+      bool next_layer_is_softmax = false;
+      if((layer_id+1) < layers_.size() && (layers_[layer_id+1]->layer_param().type() == "Softmax" ||
+          layers_[layer_id+1]->layer_param().type() == "SoftmaxWithLoss")) {
+        next_layer_is_softmax = true;
+      }
+      bool next_layer_is_not_softmax = (!next_layer_is_softmax);
+      bool is_candidate_layer = (layer_param.type() == "Convolution" /*|| layer_param.type() == "InnerProduct"*/);
+
+      if(next_layer_is_not_softmax && is_candidate_layer) {
           int num_params_to_check = std::min<int>(max_params_to_check, layers_[layer_id]->blobs().size());
           for (int param_id = 0; param_id < num_params_to_check;++param_id) {
             const Blob& blob = *layers_[layer_id]->blobs()[param_id];
