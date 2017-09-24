@@ -412,8 +412,8 @@ void Solver::ThresholdNet() {
       float sparsity_achieved = this->DisplayConnectivitySparsity(false);
       if(sparsity_factor_ < sparsity_target_max && sparsity_achieved < param_.sparsity_target()) {
 
-        float threshold_value_maxratio = 0.25;
-        float threshold_value_max = 0.25;
+        float threshold_value_maxratio = param_.sparsity_threshold_maxratio(); //0.1; //0.2;
+        float threshold_value_max = 0.2;
 
         if(sparsity_factor_ > sparsity_target_max2) {
           //if sparsity is still not achieved, make the factors more aggressive
