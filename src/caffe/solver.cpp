@@ -402,24 +402,23 @@ void Solver::ThresholdNet() {
   if (param_.sparse_mode() != SPARSE_NONE && Caffe::root_solver()) {
     if(param_.sparsity_target() > 0.0 && iter_ >= param_.sparsity_start_iter() &&
         (iter_ % param_.sparsity_step_iter())==0) {
-      float threshold_fraction_low = sparsity_factor_/2;
-      float threshold_fraction_mid = sparsity_factor_;
-      float threshold_fraction_high = sparsity_factor_;
+      float threshold_fraction_low = this->sparsity_factor_/2;
+      float threshold_fraction_mid = this->sparsity_factor_;
+      float threshold_fraction_high = this->sparsity_factor_;
       float threshold_step_factor = 1e-6;
-      float sparsity_target_max = std::min((param_.sparsity_target() + 0.10), 0.95);
-      float sparsity_target_max2 = (param_.sparsity_target() + sparsity_target_max)/2;
+      float sparsity_target_max = std::min((param_.sparsity_target() + 0.15), 0.95);
 
       float sparsity_achieved = this->DisplayConnectivitySparsity(false);
-      if(sparsity_factor_ < sparsity_target_max && sparsity_achieved < param_.sparsity_target()) {
+      if(this->sparsity_factor_ <= sparsity_target_max && sparsity_achieved < param_.sparsity_target()) {
 
         float threshold_value_maxratio = param_.sparsity_threshold_maxratio(); //0.1; //0.2;
         float threshold_value_max = 0.2;
 
-        if(sparsity_factor_ > sparsity_target_max2) {
-          //if sparsity is still not achieved, make the factors more aggressive
-          threshold_value_maxratio = 0.5;
-          threshold_value_max = 0.5;
-        }
+        //if(this->sparsity_factor_ >= sparsity_target_max) {
+        //  //if sparsity is still not achieved, make the factors more aggressive
+        //  threshold_value_maxratio = 0.5;
+        //  threshold_value_max = 0.5;
+        //}
 
         LOG(INFO) << "Finding and applying sparsity: sparsity_target=" << param_.sparsity_target()
           << " sparsity_factor=" << sparsity_factor_ << " sparsity_achieved=" << sparsity_achieved
@@ -430,10 +429,10 @@ void Solver::ThresholdNet() {
           threshold_value_maxratio, threshold_value_max, threshold_step_factor, false);
 
         //if sparsity is still not achieved, try to achieve by layer-wise sparsity and aggressive factors.
-        if(sparsity_factor_ > sparsity_target_max2) {
-          net_->FindAndApplyThresholdNet(threshold_fraction_low, threshold_fraction_mid, threshold_fraction_high,
-            threshold_value_maxratio, threshold_value_max, threshold_step_factor, false);
-        }
+        //if(sparsity_factor_ >= sparsity_target_max) {
+        //  net_->FindAndApplyThresholdNet(threshold_fraction_low, threshold_fraction_mid, threshold_fraction_high,
+        //    threshold_value_maxratio, threshold_value_max, threshold_step_factor, false);
+        //}
 
         this->StoreSparseModeConnectivity();
 
