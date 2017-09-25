@@ -345,6 +345,14 @@ void Solver::Step(int iters) {
     // the number of times the weights have been updated.
     ++iter_;
 
+    //apply thresholding for sparsity
+    this->ThresholdNet();
+    if(Caffe::root_solver() && param_.display_sparsity() > 0 &&
+      (iter_ % param_.display_sparsity()) == 0) {
+        LOG(INFO) << "Sparsity after update:";
+        net_->DisplaySparsity(true);
+    }
+
     SolverAction::Enum request = GetRequestedAction();
     // Save a snapshot if needed.
     if ((param_.snapshot()
@@ -359,18 +367,15 @@ void Solver::Step(int iters) {
       // Break out of training loop.
       break;
     }
-
-    this->ThresholdNet();
-	
-    if(Caffe::root_solver() && param_.display_sparsity() > 0 && 
-	  (iter_ % param_.display_sparsity()) == 0) {
-      if(Caffe::root_solver()) {
-          LOG(INFO) << "Sparsity after update:";
-          net_->DisplaySparsity(true);
-      }
-    }
   }
   Finalize();
+
+  //apply thresholding for sparsity
+  this->ThresholdNet();
+  if(Caffe::root_solver() && param_.display_sparsity() > 0) {
+      LOG(INFO) << "Sparsity after training:";
+      net_->DisplaySparsity(true);
+  }
 }
 
 void Solver::Finalize() {
