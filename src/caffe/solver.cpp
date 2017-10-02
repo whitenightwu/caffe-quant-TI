@@ -410,7 +410,7 @@ void Solver::ThresholdNet() {
       float threshold_fraction_low = this->sparsity_factor_/2;
       float threshold_fraction_mid = this->sparsity_factor_;
       float threshold_fraction_high = this->sparsity_factor_;
-      float threshold_step_factor = 1e-6;
+      float threshold_step_factor = 1e-7;//1e-6;
       float sparsity_target_max = std::min((param_.sparsity_target() + 0.15), 0.95);
 
       float sparsity_achieved = this->DisplayConnectivitySparsity(false);
