@@ -139,15 +139,18 @@ double QuantizedLayer<Ftype, Btype>::RandUniform_cpu(){
 
 template void QuantizedLayer<double, double>::Quantize_cpu(const vector<Blob*>& bottom,const vector<Blob*>& top);
 template void QuantizedLayer<double, float>::Quantize_cpu(const vector<Blob*>& bottom,const vector<Blob*>& top);
-template void QuantizedLayer<double, float16>::Quantize_cpu(const vector<Blob*>& bottom,const vector<Blob*>& top);
 
 template void QuantizedLayer<float, double>::Quantize_cpu(const vector<Blob*>& bottom,const vector<Blob*>& top);
 template void QuantizedLayer<float, float>::Quantize_cpu(const vector<Blob*>& bottom,const vector<Blob*>& top);
+
+#ifndef CPU_ONLY
+template void QuantizedLayer<double, float16>::Quantize_cpu(const vector<Blob*>& bottom,const vector<Blob*>& top);
 template void QuantizedLayer<float, float16>::Quantize_cpu(const vector<Blob*>& bottom,const vector<Blob*>& top);
 
 template void QuantizedLayer<float16, double>::Quantize_cpu(const vector<Blob*>& bottom,const vector<Blob*>& top);
 template void QuantizedLayer<float16, float>::Quantize_cpu(const vector<Blob*>& bottom,const vector<Blob*>& top);
 template void QuantizedLayer<float16, float16>::Quantize_cpu(const vector<Blob*>& bottom,const vector<Blob*>& top);
+#endif
 
 }
 

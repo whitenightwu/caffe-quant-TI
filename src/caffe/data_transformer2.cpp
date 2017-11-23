@@ -330,15 +330,19 @@ vector<int> DataTransformer<Dtype>::InferBlobShape(
 
 template void DataTransformer<float>::Transform(const TBlob<float>* input_blob, TBlob<float>* transformed_blob,
     const std::array<unsigned int, 3>& rand, bool use_mean);
+#ifndef CPU_ONLY
 template void DataTransformer<float16>::Transform(const TBlob<float16>* input_blob, TBlob<float16>* transformed_blob,
     const std::array<unsigned int, 3>& rand, bool use_mean);
+#endif
 template void DataTransformer<double>::Transform(const TBlob<double>* input_blob, TBlob<double>* transformed_blob,
     const std::array<unsigned int, 3>& rand, bool use_mean);
 
 template void DataTransformer<float>::Transform(const cv::Mat& cv_img, const cv::Mat& cv_label,
     TBlob<float>* transformed_image, TBlob<float>* transformed_label);
+#ifndef CPU_ONLY
 template void DataTransformer<float16>::Transform(const cv::Mat& cv_img, const cv::Mat& cv_label,
     TBlob<float16>* transformed_image, TBlob<float16>* transformed_label);
+#endif
 template void DataTransformer<double>::Transform(const cv::Mat& cv_img, const cv::Mat& cv_label,
     TBlob<double>* transformed_image, TBlob<double>* transformed_label);
 
