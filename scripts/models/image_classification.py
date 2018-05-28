@@ -1,5 +1,11 @@
 from __future__ import print_function
+#import caffe
+
+import sys
+caffe_root = '../../caffe-jacinto/'  # points to the root directory of caffe
+sys.path.insert(0, caffe_root + 'python')
 import caffe
+
 from google.protobuf import text_format
 import ast
 from models.model_libs import *
@@ -43,11 +49,15 @@ def main():
     ### Modify the following parameters accordingly ###
     # The directory which contains the caffe code.
     # We assume you are running the script at the CAFFE_ROOT.
-    config_param.caffe_root = os.environ['CAFFE_ROOT'] if 'CAFFE_ROOT' in os.environ else None
-    if config_param.caffe_root == None:
-      config_param.caffe_root = os.environ['CAFFE_HOME'] if 'CAFFE_HOME' in os.environ else None
-    if config_param.caffe_root != None:
-      config_param.caffe_root = config_param.caffe_root + '/build/tools/caffe.bin'
+
+    config_param.caffe_root = '../../caffe-jacinto/'
+    config_param.caffe_root = config_param.caffe_root + '/build/tools/caffe.bin'
+
+    # config_param.caffe_root = os.environ['CAFFE_ROOT'] if 'CAFFE_ROOT' in os.environ else None
+    # if config_param.caffe_root == None:
+    #   config_param.caffe_root = os.environ['CAFFE_HOME'] if 'CAFFE_HOME' in os.environ else None
+    # if config_param.caffe_root != None:
+    #   config_param.caffe_root = config_param.caffe_root + '/build/tools/caffe.bin'
     config_param.caffe_cmd = 'train'
 
     # Set true if you want to start training right after generating all files.
@@ -266,7 +276,8 @@ def main():
         #if you want the train and test in same proto, 
         #get the proto string for the data layer, train phase.
         #print(train_proto_str, file=f) 
-        print(net.to_proto(verbose=False), file=f)
+#        print(net.to_proto(verbose=False), file=f)
+        print(net.to_proto(), file=f)
     if config_param.save_dir!=config_param.job_dir:        
       shutil.copy(config_param.train_net_file, config_param.job_dir)
 
@@ -274,14 +285,16 @@ def main():
     net = define_net(phase='test')
     with open(config_param.test_net_file, 'w') as f:
         print('name: "{}_test"'.format(config_param.model_name), file=f)
-        print(net.to_proto(verbose=False), file=f)
+#        print(net.to_proto(verbose=False), file=f)
+        print(net.to_proto(), file=f)
     if config_param.save_dir!=config_param.job_dir:
       shutil.copy(config_param.test_net_file, config_param.job_dir)
 
     # Create deploy net.
     deploy_net = define_net(phase='deploy')
     with open(config_param.deploy_net_file, 'w') as f:
-        net_param = deploy_net.to_proto(verbose=False)
+#        net_param = deploy_net.to_proto(verbose=False)
+        net_param = deploy_net.to_proto()
         # Remove the few layers first
         del net_param.layer[0]
         #del net_param.layer[-1]

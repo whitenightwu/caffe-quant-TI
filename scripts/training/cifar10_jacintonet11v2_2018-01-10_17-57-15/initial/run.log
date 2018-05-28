@@ -1,0 +1,2073 @@
+I0110 17:57:23.927748 30938 caffe.cpp:807] This is NVCaffe 0.16.4 started at Wed Jan 10 17:57:23 2018
+I0110 17:57:23.944159 30938 caffe.cpp:810] CuDNN version: USE_CUDNN is not defined
+I0110 17:57:23.944167 30938 caffe.cpp:811] CuBLAS version: 8000
+I0110 17:57:23.944171 30938 caffe.cpp:812] CUDA version: 8000
+I0110 17:57:23.944175 30938 caffe.cpp:813] CUDA driver version: 8000
+I0110 17:57:24.507383 30938 gpu_memory.cpp:159] GPUMemory::Manager initialized with Caching (CUB) GPU Allocator
+I0110 17:57:24.508038 30938 gpu_memory.cpp:161] Total memory: 11715084288, Free: 7755661312, dev_info[1]: total=11715084288 free=7755661312
+I0110 17:57:24.508059 30938 caffe.cpp:214] Using GPUs 1
+I0110 17:57:24.508389 30938 caffe.cpp:219] GPU 1: Graphics Device
+I0110 17:57:24.509019 30938 solver.cpp:43] Solver data type: FLOAT
+I0110 17:57:24.509124 30938 solver.cpp:46] Initializing solver from parameters: 
+train_net: "training/cifar10_jacintonet11v2_2018-01-10_17-57-15/initial/train.prototxt"
+test_net: "training/cifar10_jacintonet11v2_2018-01-10_17-57-15/initial/test.prototxt"
+test_iter: 200
+test_interval: 1000
+base_lr: 0.1
+display: 100
+max_iter: 64000
+lr_policy: "poly"
+gamma: 0.1
+power: 1
+momentum: 0.9
+weight_decay: 0.0001
+snapshot: 10000
+snapshot_prefix: "training/cifar10_jacintonet11v2_2018-01-10_17-57-15/initial/cifar10_jacintonet11v2"
+solver_mode: GPU
+device_id: 1
+random_seed: 33
+debug_info: false
+snapshot_after_train: true
+test_initialization: true
+iter_size: 1
+type: "SGD"
+I0110 17:57:24.520026 30938 solver.cpp:78] Creating training net from train_net file: training/cifar10_jacintonet11v2_2018-01-10_17-57-15/initial/train.prototxt
+I0110 17:57:24.520998 30938 net.cpp:443] The NetState phase (0) differed from the phase (1) specified by a rule in layer accuracy/top1
+I0110 17:57:24.521015 30938 net.cpp:443] The NetState phase (0) differed from the phase (1) specified by a rule in layer accuracy/top5
+I0110 17:57:24.521327 30938 net.cpp:72] Initializing net from parameters: 
+name: "jacintonet11v2_train"
+state {
+  phase: TRAIN
+}
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  transform_param {
+    mirror: true
+    crop_size: 32
+    mean_value: 0
+    mean_value: 0
+    mean_value: 0
+  }
+  data_param {
+    source: "./data/cifar10_train_lmdb"
+    batch_size: 64
+    backend: LMDB
+    threads: 1
+    parser_threads: 1
+  }
+}
+layer {
+  name: "data/bias"
+  type: "Bias"
+  bottom: "data"
+  top: "data/bias"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  bias_param {
+    filler {
+      type: "constant"
+      value: -128
+    }
+  }
+}
+layer {
+  name: "conv1a"
+  type: "Convolution"
+  bottom: "data/bias"
+  top: "conv1a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 32
+    bias_term: true
+    pad: 2
+    kernel_size: 5
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "conv1a/bn"
+  type: "BatchNorm"
+  bottom: "conv1a"
+  top: "conv1a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "conv1a/relu"
+  type: "ReLU"
+  bottom: "conv1a"
+  top: "conv1a"
+}
+layer {
+  name: "conv1b"
+  type: "Convolution"
+  bottom: "conv1a"
+  top: "conv1b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 32
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "conv1b/bn"
+  type: "BatchNorm"
+  bottom: "conv1b"
+  top: "conv1b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "conv1b/relu"
+  type: "ReLU"
+  bottom: "conv1b"
+  top: "conv1b"
+}
+layer {
+  name: "pool1"
+  type: "Pooling"
+  bottom: "conv1b"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 1
+    stride: 1
+  }
+}
+layer {
+  name: "res2a_branch2a"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "res2a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res2a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res2a_branch2a"
+  top: "res2a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res2a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res2a_branch2a"
+  top: "res2a_branch2a"
+}
+layer {
+  name: "res2a_branch2b"
+  type: "Convolution"
+  bottom: "res2a_branch2a"
+  top: "res2a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res2a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res2a_branch2b"
+  top: "res2a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res2a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res2a_branch2b"
+  top: "res2a_branch2b"
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "res2a_branch2b"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "res3a_branch2a"
+  type: "Convolution"
+  bottom: "pool2"
+  top: "res3a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res3a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res3a_branch2a"
+  top: "res3a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res3a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res3a_branch2a"
+  top: "res3a_branch2a"
+}
+layer {
+  name: "res3a_branch2b"
+  type: "Convolution"
+  bottom: "res3a_branch2a"
+  top: "res3a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res3a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res3a_branch2b"
+  top: "res3a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res3a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res3a_branch2b"
+  top: "res3a_branch2b"
+}
+layer {
+  name: "pool3"
+  type: "Pooling"
+  bottom: "res3a_branch2b"
+  top: "pool3"
+  pooling_param {
+    pool: MAX
+    kernel_size: 1
+    stride: 1
+  }
+}
+layer {
+  name: "res4a_branch2a"
+  type: "Convolution"
+  bottom: "pool3"
+  top: "res4a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res4a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res4a_branch2a"
+  top: "res4a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res4a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res4a_branch2a"
+  top: "res4a_branch2a"
+}
+layer {
+  name: "res4a_branch2b"
+  type: "Convolution"
+  bottom: "res4a_branch2a"
+  top: "res4a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res4a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res4a_branch2b"
+  top: "res4a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res4a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res4a_branch2b"
+  top: "res4a_branch2b"
+}
+layer {
+  name: "pool4"
+  type: "Pooling"
+  bottom: "res4a_branch2b"
+  top: "pool4"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "res5a_branch2a"
+  type: "Convolution"
+  bottom: "pool4"
+  top: "res5a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res5a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res5a_branch2a"
+  top: "res5a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res5a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res5a_branch2a"
+  top: "res5a_branch2a"
+}
+layer {
+  name: "res5a_branch2b"
+  type: "Convolution"
+  bottom: "res5a_branch2a"
+  top: "res5a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res5a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res5a_branch2b"
+  top: "res5a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res5a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res5a_branch2b"
+  top: "res5a_branch2b"
+}
+layer {
+  name: "pool5"
+  type: "Pooling"
+  bottom: "res5a_branch2b"
+  top: "pool5"
+  pooling_param {
+    pool: AVE
+    global_pooling: true
+  }
+}
+layer {
+  name: "fc10"
+  type: "InnerProduct"
+  bottom: "pool5"
+  top: "fc10"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 10
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "fc10"
+  bottom: "label"
+  top: "loss"
+  propagate_down: true
+  propagate_down: false
+}
+I0110 17:57:24.521526 30938 net.cpp:104] Using FLOAT as default forward math type
+I0110 17:57:24.521538 30938 net.cpp:110] Using FLOAT as default backward math type
+I0110 17:57:24.521548 30938 layer_factory.hpp:136] Creating layer 'data' of type 'Data'
+I0110 17:57:24.521554 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.538108 30938 net.cpp:184] Created Layer data (0)
+I0110 17:57:24.538141 30938 net.cpp:530] data -> data
+I0110 17:57:24.538163 30938 net.cpp:530] data -> label
+I0110 17:57:24.548804 30938 data_reader.cpp:58] Data Reader threads: 1, out queues: 1, depth: 64
+I0110 17:57:24.548854 30938 internal_thread.cpp:19] Starting 1 internal thread(s) on device 1
+I0110 17:57:24.549746 30969 db_lmdb.cpp:24] Opened lmdb ./data/cifar10_train_lmdb
+I0110 17:57:24.553014 30938 data_layer.cpp:187] [1] ReshapePrefetch 64, 3, 32, 32
+I0110 17:57:24.553110 30938 data_layer.cpp:211] [1] Output data size: 64, 3, 32, 32
+I0110 17:57:24.553124 30938 internal_thread.cpp:19] Starting 1 internal thread(s) on device 1
+I0110 17:57:24.553159 30938 net.cpp:245] Setting up data
+I0110 17:57:24.553179 30938 net.cpp:252] TRAIN Top shape for layer 0 'data' 64 3 32 32 (196608)
+I0110 17:57:24.553210 30938 net.cpp:252] TRAIN Top shape for layer 0 'data' 64 (64)
+I0110 17:57:24.553226 30938 layer_factory.hpp:136] Creating layer 'data/bias' of type 'Bias'
+I0110 17:57:24.553234 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.558382 30938 net.cpp:184] Created Layer data/bias (1)
+I0110 17:57:24.558398 30938 net.cpp:561] data/bias <- data
+I0110 17:57:24.558414 30938 net.cpp:530] data/bias -> data/bias
+I0110 17:57:24.569752 30938 net.cpp:245] Setting up data/bias
+I0110 17:57:24.569772 30938 net.cpp:252] TRAIN Top shape for layer 1 'data/bias' 64 3 32 32 (196608)
+I0110 17:57:24.569792 30938 layer_factory.hpp:136] Creating layer 'conv1a' of type 'Convolution'
+I0110 17:57:24.569799 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.569829 30938 net.cpp:184] Created Layer conv1a (2)
+I0110 17:57:24.569836 30938 net.cpp:561] conv1a <- data/bias
+I0110 17:57:24.569844 30938 net.cpp:530] conv1a -> conv1a
+I0110 17:57:24.575378 30938 net.cpp:245] Setting up conv1a
+I0110 17:57:24.575397 30938 net.cpp:252] TRAIN Top shape for layer 2 'conv1a' 64 32 32 32 (2097152)
+I0110 17:57:24.575410 30938 layer_factory.hpp:136] Creating layer 'conv1a/bn' of type 'BatchNorm'
+I0110 17:57:24.575417 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.575434 30938 net.cpp:184] Created Layer conv1a/bn (3)
+I0110 17:57:24.575441 30938 net.cpp:561] conv1a/bn <- conv1a
+I0110 17:57:24.575448 30938 net.cpp:513] conv1a/bn -> conv1a (in-place)
+I0110 17:57:24.584374 30938 net.cpp:245] Setting up conv1a/bn
+I0110 17:57:24.584391 30938 net.cpp:252] TRAIN Top shape for layer 3 'conv1a/bn' 64 32 32 32 (2097152)
+I0110 17:57:24.584406 30938 layer_factory.hpp:136] Creating layer 'conv1a/relu' of type 'ReLU'
+I0110 17:57:24.584414 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.584429 30938 net.cpp:184] Created Layer conv1a/relu (4)
+I0110 17:57:24.584435 30938 net.cpp:561] conv1a/relu <- conv1a
+I0110 17:57:24.584441 30938 net.cpp:513] conv1a/relu -> conv1a (in-place)
+I0110 17:57:24.590240 30938 net.cpp:245] Setting up conv1a/relu
+I0110 17:57:24.590255 30938 net.cpp:252] TRAIN Top shape for layer 4 'conv1a/relu' 64 32 32 32 (2097152)
+I0110 17:57:24.590262 30938 layer_factory.hpp:136] Creating layer 'conv1b' of type 'Convolution'
+I0110 17:57:24.590267 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.590288 30938 net.cpp:184] Created Layer conv1b (5)
+I0110 17:57:24.590294 30938 net.cpp:561] conv1b <- conv1a
+I0110 17:57:24.590301 30938 net.cpp:530] conv1b -> conv1b
+I0110 17:57:24.590987 30938 net.cpp:245] Setting up conv1b
+I0110 17:57:24.591004 30938 net.cpp:252] TRAIN Top shape for layer 5 'conv1b' 64 32 32 32 (2097152)
+I0110 17:57:24.591018 30938 layer_factory.hpp:136] Creating layer 'conv1b/bn' of type 'BatchNorm'
+I0110 17:57:24.591024 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.591032 30938 net.cpp:184] Created Layer conv1b/bn (6)
+I0110 17:57:24.591037 30938 net.cpp:561] conv1b/bn <- conv1b
+I0110 17:57:24.591043 30938 net.cpp:513] conv1b/bn -> conv1b (in-place)
+I0110 17:57:24.593278 30938 net.cpp:245] Setting up conv1b/bn
+I0110 17:57:24.593294 30938 net.cpp:252] TRAIN Top shape for layer 6 'conv1b/bn' 64 32 32 32 (2097152)
+I0110 17:57:24.593307 30938 layer_factory.hpp:136] Creating layer 'conv1b/relu' of type 'ReLU'
+I0110 17:57:24.593313 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.593324 30938 net.cpp:184] Created Layer conv1b/relu (7)
+I0110 17:57:24.593330 30938 net.cpp:561] conv1b/relu <- conv1b
+I0110 17:57:24.593335 30938 net.cpp:513] conv1b/relu -> conv1b (in-place)
+I0110 17:57:24.593341 30938 net.cpp:245] Setting up conv1b/relu
+I0110 17:57:24.593348 30938 net.cpp:252] TRAIN Top shape for layer 7 'conv1b/relu' 64 32 32 32 (2097152)
+I0110 17:57:24.593369 30938 layer_factory.hpp:136] Creating layer 'pool1' of type 'Pooling'
+I0110 17:57:24.593384 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.593400 30938 net.cpp:184] Created Layer pool1 (8)
+I0110 17:57:24.593408 30938 net.cpp:561] pool1 <- conv1b
+I0110 17:57:24.593415 30938 net.cpp:530] pool1 -> pool1
+I0110 17:57:24.593487 30938 net.cpp:245] Setting up pool1
+I0110 17:57:24.593500 30938 net.cpp:252] TRAIN Top shape for layer 8 'pool1' 64 32 32 32 (2097152)
+I0110 17:57:24.593506 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2a' of type 'Convolution'
+I0110 17:57:24.593513 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.593529 30938 net.cpp:184] Created Layer res2a_branch2a (9)
+I0110 17:57:24.593535 30938 net.cpp:561] res2a_branch2a <- pool1
+I0110 17:57:24.593541 30938 net.cpp:530] res2a_branch2a -> res2a_branch2a
+I0110 17:57:24.596411 30938 net.cpp:245] Setting up res2a_branch2a
+I0110 17:57:24.596431 30938 net.cpp:252] TRAIN Top shape for layer 9 'res2a_branch2a' 64 64 32 32 (4194304)
+I0110 17:57:24.596444 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2a/bn' of type 'BatchNorm'
+I0110 17:57:24.596451 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.596462 30938 net.cpp:184] Created Layer res2a_branch2a/bn (10)
+I0110 17:57:24.596467 30938 net.cpp:561] res2a_branch2a/bn <- res2a_branch2a
+I0110 17:57:24.596473 30938 net.cpp:513] res2a_branch2a/bn -> res2a_branch2a (in-place)
+I0110 17:57:24.601313 30938 net.cpp:245] Setting up res2a_branch2a/bn
+I0110 17:57:24.601330 30938 net.cpp:252] TRAIN Top shape for layer 10 'res2a_branch2a/bn' 64 64 32 32 (4194304)
+I0110 17:57:24.601342 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2a/relu' of type 'ReLU'
+I0110 17:57:24.601348 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.601359 30938 net.cpp:184] Created Layer res2a_branch2a/relu (11)
+I0110 17:57:24.601364 30938 net.cpp:561] res2a_branch2a/relu <- res2a_branch2a
+I0110 17:57:24.601371 30938 net.cpp:513] res2a_branch2a/relu -> res2a_branch2a (in-place)
+I0110 17:57:24.601377 30938 net.cpp:245] Setting up res2a_branch2a/relu
+I0110 17:57:24.601382 30938 net.cpp:252] TRAIN Top shape for layer 11 'res2a_branch2a/relu' 64 64 32 32 (4194304)
+I0110 17:57:24.601388 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2b' of type 'Convolution'
+I0110 17:57:24.601393 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.601410 30938 net.cpp:184] Created Layer res2a_branch2b (12)
+I0110 17:57:24.601418 30938 net.cpp:561] res2a_branch2b <- res2a_branch2a
+I0110 17:57:24.601424 30938 net.cpp:530] res2a_branch2b -> res2a_branch2b
+I0110 17:57:24.603749 30938 net.cpp:245] Setting up res2a_branch2b
+I0110 17:57:24.603770 30938 net.cpp:252] TRAIN Top shape for layer 12 'res2a_branch2b' 64 64 32 32 (4194304)
+I0110 17:57:24.603780 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2b/bn' of type 'BatchNorm'
+I0110 17:57:24.603786 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.603794 30938 net.cpp:184] Created Layer res2a_branch2b/bn (13)
+I0110 17:57:24.603801 30938 net.cpp:561] res2a_branch2b/bn <- res2a_branch2b
+I0110 17:57:24.603806 30938 net.cpp:513] res2a_branch2b/bn -> res2a_branch2b (in-place)
+I0110 17:57:24.607189 30938 net.cpp:245] Setting up res2a_branch2b/bn
+I0110 17:57:24.607205 30938 net.cpp:252] TRAIN Top shape for layer 13 'res2a_branch2b/bn' 64 64 32 32 (4194304)
+I0110 17:57:24.607220 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2b/relu' of type 'ReLU'
+I0110 17:57:24.607228 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.607235 30938 net.cpp:184] Created Layer res2a_branch2b/relu (14)
+I0110 17:57:24.607240 30938 net.cpp:561] res2a_branch2b/relu <- res2a_branch2b
+I0110 17:57:24.607260 30938 net.cpp:513] res2a_branch2b/relu -> res2a_branch2b (in-place)
+I0110 17:57:24.607269 30938 net.cpp:245] Setting up res2a_branch2b/relu
+I0110 17:57:24.607275 30938 net.cpp:252] TRAIN Top shape for layer 14 'res2a_branch2b/relu' 64 64 32 32 (4194304)
+I0110 17:57:24.607290 30938 layer_factory.hpp:136] Creating layer 'pool2' of type 'Pooling'
+I0110 17:57:24.607295 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.607306 30938 net.cpp:184] Created Layer pool2 (15)
+I0110 17:57:24.607313 30938 net.cpp:561] pool2 <- res2a_branch2b
+I0110 17:57:24.607319 30938 net.cpp:530] pool2 -> pool2
+I0110 17:57:24.607393 30938 net.cpp:245] Setting up pool2
+I0110 17:57:24.607406 30938 net.cpp:252] TRAIN Top shape for layer 15 'pool2' 64 64 16 16 (1048576)
+I0110 17:57:24.607414 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2a' of type 'Convolution'
+I0110 17:57:24.607419 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.607440 30938 net.cpp:184] Created Layer res3a_branch2a (16)
+I0110 17:57:24.607447 30938 net.cpp:561] res3a_branch2a <- pool2
+I0110 17:57:24.607452 30938 net.cpp:530] res3a_branch2a -> res3a_branch2a
+I0110 17:57:24.611932 30938 net.cpp:245] Setting up res3a_branch2a
+I0110 17:57:24.611951 30938 net.cpp:252] TRAIN Top shape for layer 16 'res3a_branch2a' 64 128 16 16 (2097152)
+I0110 17:57:24.611963 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2a/bn' of type 'BatchNorm'
+I0110 17:57:24.611968 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.611976 30938 net.cpp:184] Created Layer res3a_branch2a/bn (17)
+I0110 17:57:24.611982 30938 net.cpp:561] res3a_branch2a/bn <- res3a_branch2a
+I0110 17:57:24.611989 30938 net.cpp:513] res3a_branch2a/bn -> res3a_branch2a (in-place)
+I0110 17:57:24.614754 30938 net.cpp:245] Setting up res3a_branch2a/bn
+I0110 17:57:24.614770 30938 net.cpp:252] TRAIN Top shape for layer 17 'res3a_branch2a/bn' 64 128 16 16 (2097152)
+I0110 17:57:24.614791 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2a/relu' of type 'ReLU'
+I0110 17:57:24.614799 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.614806 30938 net.cpp:184] Created Layer res3a_branch2a/relu (18)
+I0110 17:57:24.614811 30938 net.cpp:561] res3a_branch2a/relu <- res3a_branch2a
+I0110 17:57:24.614817 30938 net.cpp:513] res3a_branch2a/relu -> res3a_branch2a (in-place)
+I0110 17:57:24.614825 30938 net.cpp:245] Setting up res3a_branch2a/relu
+I0110 17:57:24.614830 30938 net.cpp:252] TRAIN Top shape for layer 18 'res3a_branch2a/relu' 64 128 16 16 (2097152)
+I0110 17:57:24.614835 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2b' of type 'Convolution'
+I0110 17:57:24.614841 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.614861 30938 net.cpp:184] Created Layer res3a_branch2b (19)
+I0110 17:57:24.614869 30938 net.cpp:561] res3a_branch2b <- res3a_branch2a
+I0110 17:57:24.614876 30938 net.cpp:530] res3a_branch2b -> res3a_branch2b
+I0110 17:57:24.616849 30938 net.cpp:245] Setting up res3a_branch2b
+I0110 17:57:24.616868 30938 net.cpp:252] TRAIN Top shape for layer 19 'res3a_branch2b' 64 128 16 16 (2097152)
+I0110 17:57:24.616878 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2b/bn' of type 'BatchNorm'
+I0110 17:57:24.616883 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.616891 30938 net.cpp:184] Created Layer res3a_branch2b/bn (20)
+I0110 17:57:24.616896 30938 net.cpp:561] res3a_branch2b/bn <- res3a_branch2b
+I0110 17:57:24.616902 30938 net.cpp:513] res3a_branch2b/bn -> res3a_branch2b (in-place)
+I0110 17:57:24.619122 30938 net.cpp:245] Setting up res3a_branch2b/bn
+I0110 17:57:24.619138 30938 net.cpp:252] TRAIN Top shape for layer 20 'res3a_branch2b/bn' 64 128 16 16 (2097152)
+I0110 17:57:24.619151 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2b/relu' of type 'ReLU'
+I0110 17:57:24.619170 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.619181 30938 net.cpp:184] Created Layer res3a_branch2b/relu (21)
+I0110 17:57:24.619187 30938 net.cpp:561] res3a_branch2b/relu <- res3a_branch2b
+I0110 17:57:24.619194 30938 net.cpp:513] res3a_branch2b/relu -> res3a_branch2b (in-place)
+I0110 17:57:24.619199 30938 net.cpp:245] Setting up res3a_branch2b/relu
+I0110 17:57:24.619206 30938 net.cpp:252] TRAIN Top shape for layer 21 'res3a_branch2b/relu' 64 128 16 16 (2097152)
+I0110 17:57:24.619211 30938 layer_factory.hpp:136] Creating layer 'pool3' of type 'Pooling'
+I0110 17:57:24.619217 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.619227 30938 net.cpp:184] Created Layer pool3 (22)
+I0110 17:57:24.619241 30938 net.cpp:561] pool3 <- res3a_branch2b
+I0110 17:57:24.619247 30938 net.cpp:530] pool3 -> pool3
+I0110 17:57:24.619313 30938 net.cpp:245] Setting up pool3
+I0110 17:57:24.619324 30938 net.cpp:252] TRAIN Top shape for layer 22 'pool3' 64 128 16 16 (2097152)
+I0110 17:57:24.619330 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2a' of type 'Convolution'
+I0110 17:57:24.619336 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.619355 30938 net.cpp:184] Created Layer res4a_branch2a (23)
+I0110 17:57:24.619361 30938 net.cpp:561] res4a_branch2a <- pool3
+I0110 17:57:24.619367 30938 net.cpp:530] res4a_branch2a -> res4a_branch2a
+I0110 17:57:24.628705 30938 net.cpp:245] Setting up res4a_branch2a
+I0110 17:57:24.628724 30938 net.cpp:252] TRAIN Top shape for layer 23 'res4a_branch2a' 64 256 16 16 (4194304)
+I0110 17:57:24.628734 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2a/bn' of type 'BatchNorm'
+I0110 17:57:24.628741 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.628748 30938 net.cpp:184] Created Layer res4a_branch2a/bn (24)
+I0110 17:57:24.628754 30938 net.cpp:561] res4a_branch2a/bn <- res4a_branch2a
+I0110 17:57:24.628760 30938 net.cpp:513] res4a_branch2a/bn -> res4a_branch2a (in-place)
+I0110 17:57:24.631307 30938 net.cpp:245] Setting up res4a_branch2a/bn
+I0110 17:57:24.631323 30938 net.cpp:252] TRAIN Top shape for layer 24 'res4a_branch2a/bn' 64 256 16 16 (4194304)
+I0110 17:57:24.631335 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2a/relu' of type 'ReLU'
+I0110 17:57:24.631342 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.631352 30938 net.cpp:184] Created Layer res4a_branch2a/relu (25)
+I0110 17:57:24.631357 30938 net.cpp:561] res4a_branch2a/relu <- res4a_branch2a
+I0110 17:57:24.631363 30938 net.cpp:513] res4a_branch2a/relu -> res4a_branch2a (in-place)
+I0110 17:57:24.631371 30938 net.cpp:245] Setting up res4a_branch2a/relu
+I0110 17:57:24.631376 30938 net.cpp:252] TRAIN Top shape for layer 25 'res4a_branch2a/relu' 64 256 16 16 (4194304)
+I0110 17:57:24.631381 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2b' of type 'Convolution'
+I0110 17:57:24.631386 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.631403 30938 net.cpp:184] Created Layer res4a_branch2b (26)
+I0110 17:57:24.631412 30938 net.cpp:561] res4a_branch2b <- res4a_branch2a
+I0110 17:57:24.631417 30938 net.cpp:530] res4a_branch2b -> res4a_branch2b
+I0110 17:57:24.636221 30938 net.cpp:245] Setting up res4a_branch2b
+I0110 17:57:24.636237 30938 net.cpp:252] TRAIN Top shape for layer 26 'res4a_branch2b' 64 256 16 16 (4194304)
+I0110 17:57:24.636247 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2b/bn' of type 'BatchNorm'
+I0110 17:57:24.636253 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.636263 30938 net.cpp:184] Created Layer res4a_branch2b/bn (27)
+I0110 17:57:24.636270 30938 net.cpp:561] res4a_branch2b/bn <- res4a_branch2b
+I0110 17:57:24.636288 30938 net.cpp:513] res4a_branch2b/bn -> res4a_branch2b (in-place)
+I0110 17:57:24.640357 30938 net.cpp:245] Setting up res4a_branch2b/bn
+I0110 17:57:24.640372 30938 net.cpp:252] TRAIN Top shape for layer 27 'res4a_branch2b/bn' 64 256 16 16 (4194304)
+I0110 17:57:24.640385 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2b/relu' of type 'ReLU'
+I0110 17:57:24.640391 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.640401 30938 net.cpp:184] Created Layer res4a_branch2b/relu (28)
+I0110 17:57:24.640408 30938 net.cpp:561] res4a_branch2b/relu <- res4a_branch2b
+I0110 17:57:24.640413 30938 net.cpp:513] res4a_branch2b/relu -> res4a_branch2b (in-place)
+I0110 17:57:24.640419 30938 net.cpp:245] Setting up res4a_branch2b/relu
+I0110 17:57:24.640425 30938 net.cpp:252] TRAIN Top shape for layer 28 'res4a_branch2b/relu' 64 256 16 16 (4194304)
+I0110 17:57:24.640431 30938 layer_factory.hpp:136] Creating layer 'pool4' of type 'Pooling'
+I0110 17:57:24.640436 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.640446 30938 net.cpp:184] Created Layer pool4 (29)
+I0110 17:57:24.640460 30938 net.cpp:561] pool4 <- res4a_branch2b
+I0110 17:57:24.640465 30938 net.cpp:530] pool4 -> pool4
+I0110 17:57:24.640535 30938 net.cpp:245] Setting up pool4
+I0110 17:57:24.640547 30938 net.cpp:252] TRAIN Top shape for layer 29 'pool4' 64 256 8 8 (1048576)
+I0110 17:57:24.640553 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2a' of type 'Convolution'
+I0110 17:57:24.640559 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.640578 30938 net.cpp:184] Created Layer res5a_branch2a (30)
+I0110 17:57:24.640584 30938 net.cpp:561] res5a_branch2a <- pool4
+I0110 17:57:24.640591 30938 net.cpp:530] res5a_branch2a -> res5a_branch2a
+I0110 17:57:24.679306 30938 net.cpp:245] Setting up res5a_branch2a
+I0110 17:57:24.679338 30938 net.cpp:252] TRAIN Top shape for layer 30 'res5a_branch2a' 64 512 8 8 (2097152)
+I0110 17:57:24.679353 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2a/bn' of type 'BatchNorm'
+I0110 17:57:24.679361 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.679375 30938 net.cpp:184] Created Layer res5a_branch2a/bn (31)
+I0110 17:57:24.679383 30938 net.cpp:561] res5a_branch2a/bn <- res5a_branch2a
+I0110 17:57:24.679390 30938 net.cpp:513] res5a_branch2a/bn -> res5a_branch2a (in-place)
+I0110 17:57:24.682397 30938 net.cpp:245] Setting up res5a_branch2a/bn
+I0110 17:57:24.682413 30938 net.cpp:252] TRAIN Top shape for layer 31 'res5a_branch2a/bn' 64 512 8 8 (2097152)
+I0110 17:57:24.682427 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2a/relu' of type 'ReLU'
+I0110 17:57:24.682433 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.682446 30938 net.cpp:184] Created Layer res5a_branch2a/relu (32)
+I0110 17:57:24.682452 30938 net.cpp:561] res5a_branch2a/relu <- res5a_branch2a
+I0110 17:57:24.682458 30938 net.cpp:513] res5a_branch2a/relu -> res5a_branch2a (in-place)
+I0110 17:57:24.682466 30938 net.cpp:245] Setting up res5a_branch2a/relu
+I0110 17:57:24.682471 30938 net.cpp:252] TRAIN Top shape for layer 32 'res5a_branch2a/relu' 64 512 8 8 (2097152)
+I0110 17:57:24.682476 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2b' of type 'Convolution'
+I0110 17:57:24.682482 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.682502 30938 net.cpp:184] Created Layer res5a_branch2b (33)
+I0110 17:57:24.682509 30938 net.cpp:561] res5a_branch2b <- res5a_branch2a
+I0110 17:57:24.682515 30938 net.cpp:530] res5a_branch2b -> res5a_branch2b
+I0110 17:57:24.702168 30938 net.cpp:245] Setting up res5a_branch2b
+I0110 17:57:24.702190 30938 net.cpp:252] TRAIN Top shape for layer 33 'res5a_branch2b' 64 512 8 8 (2097152)
+I0110 17:57:24.702214 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2b/bn' of type 'BatchNorm'
+I0110 17:57:24.702240 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.702250 30938 net.cpp:184] Created Layer res5a_branch2b/bn (34)
+I0110 17:57:24.702257 30938 net.cpp:561] res5a_branch2b/bn <- res5a_branch2b
+I0110 17:57:24.702263 30938 net.cpp:513] res5a_branch2b/bn -> res5a_branch2b (in-place)
+I0110 17:57:24.705030 30938 net.cpp:245] Setting up res5a_branch2b/bn
+I0110 17:57:24.705046 30938 net.cpp:252] TRAIN Top shape for layer 34 'res5a_branch2b/bn' 64 512 8 8 (2097152)
+I0110 17:57:24.705067 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2b/relu' of type 'ReLU'
+I0110 17:57:24.705075 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.705082 30938 net.cpp:184] Created Layer res5a_branch2b/relu (35)
+I0110 17:57:24.705088 30938 net.cpp:561] res5a_branch2b/relu <- res5a_branch2b
+I0110 17:57:24.705093 30938 net.cpp:513] res5a_branch2b/relu -> res5a_branch2b (in-place)
+I0110 17:57:24.705101 30938 net.cpp:245] Setting up res5a_branch2b/relu
+I0110 17:57:24.705108 30938 net.cpp:252] TRAIN Top shape for layer 35 'res5a_branch2b/relu' 64 512 8 8 (2097152)
+I0110 17:57:24.705114 30938 layer_factory.hpp:136] Creating layer 'pool5' of type 'Pooling'
+I0110 17:57:24.705132 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.705140 30938 net.cpp:184] Created Layer pool5 (36)
+I0110 17:57:24.705152 30938 net.cpp:561] pool5 <- res5a_branch2b
+I0110 17:57:24.705157 30938 net.cpp:530] pool5 -> pool5
+I0110 17:57:24.705204 30938 net.cpp:245] Setting up pool5
+I0110 17:57:24.705216 30938 net.cpp:252] TRAIN Top shape for layer 36 'pool5' 64 512 1 1 (32768)
+I0110 17:57:24.705222 30938 layer_factory.hpp:136] Creating layer 'fc10' of type 'InnerProduct'
+I0110 17:57:24.705229 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.738492 30938 net.cpp:184] Created Layer fc10 (37)
+I0110 17:57:24.738507 30938 net.cpp:561] fc10 <- pool5
+I0110 17:57:24.738513 30938 net.cpp:530] fc10 -> fc10
+I0110 17:57:24.739125 30938 net.cpp:245] Setting up fc10
+I0110 17:57:24.739140 30938 net.cpp:252] TRAIN Top shape for layer 37 'fc10' 64 10 (640)
+I0110 17:57:24.739150 30938 layer_factory.hpp:136] Creating layer 'loss' of type 'SoftmaxWithLoss'
+I0110 17:57:24.739156 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.739850 30938 net.cpp:184] Created Layer loss (38)
+I0110 17:57:24.739862 30938 net.cpp:561] loss <- fc10
+I0110 17:57:24.739869 30938 net.cpp:561] loss <- label
+I0110 17:57:24.739877 30938 net.cpp:530] loss -> loss
+I0110 17:57:24.746300 30938 net.cpp:245] Setting up loss
+I0110 17:57:24.746317 30938 net.cpp:252] TRAIN Top shape for layer 38 'loss' (1)
+I0110 17:57:24.746323 30938 net.cpp:256]     with loss weight 1
+I0110 17:57:24.746350 30938 net.cpp:323] loss needs backward computation.
+I0110 17:57:24.746356 30938 net.cpp:323] fc10 needs backward computation.
+I0110 17:57:24.746361 30938 net.cpp:323] pool5 needs backward computation.
+I0110 17:57:24.746366 30938 net.cpp:323] res5a_branch2b/relu needs backward computation.
+I0110 17:57:24.746369 30938 net.cpp:323] res5a_branch2b/bn needs backward computation.
+I0110 17:57:24.746373 30938 net.cpp:323] res5a_branch2b needs backward computation.
+I0110 17:57:24.746378 30938 net.cpp:323] res5a_branch2a/relu needs backward computation.
+I0110 17:57:24.746382 30938 net.cpp:323] res5a_branch2a/bn needs backward computation.
+I0110 17:57:24.746387 30938 net.cpp:323] res5a_branch2a needs backward computation.
+I0110 17:57:24.746392 30938 net.cpp:323] pool4 needs backward computation.
+I0110 17:57:24.746397 30938 net.cpp:323] res4a_branch2b/relu needs backward computation.
+I0110 17:57:24.746402 30938 net.cpp:323] res4a_branch2b/bn needs backward computation.
+I0110 17:57:24.746405 30938 net.cpp:323] res4a_branch2b needs backward computation.
+I0110 17:57:24.746410 30938 net.cpp:323] res4a_branch2a/relu needs backward computation.
+I0110 17:57:24.746435 30938 net.cpp:323] res4a_branch2a/bn needs backward computation.
+I0110 17:57:24.746441 30938 net.cpp:323] res4a_branch2a needs backward computation.
+I0110 17:57:24.746450 30938 net.cpp:323] pool3 needs backward computation.
+I0110 17:57:24.746459 30938 net.cpp:323] res3a_branch2b/relu needs backward computation.
+I0110 17:57:24.746469 30938 net.cpp:323] res3a_branch2b/bn needs backward computation.
+I0110 17:57:24.746474 30938 net.cpp:323] res3a_branch2b needs backward computation.
+I0110 17:57:24.746481 30938 net.cpp:323] res3a_branch2a/relu needs backward computation.
+I0110 17:57:24.746490 30938 net.cpp:323] res3a_branch2a/bn needs backward computation.
+I0110 17:57:24.746495 30938 net.cpp:323] res3a_branch2a needs backward computation.
+I0110 17:57:24.746500 30938 net.cpp:323] pool2 needs backward computation.
+I0110 17:57:24.746506 30938 net.cpp:323] res2a_branch2b/relu needs backward computation.
+I0110 17:57:24.746511 30938 net.cpp:323] res2a_branch2b/bn needs backward computation.
+I0110 17:57:24.746517 30938 net.cpp:323] res2a_branch2b needs backward computation.
+I0110 17:57:24.746523 30938 net.cpp:323] res2a_branch2a/relu needs backward computation.
+I0110 17:57:24.746528 30938 net.cpp:323] res2a_branch2a/bn needs backward computation.
+I0110 17:57:24.746534 30938 net.cpp:323] res2a_branch2a needs backward computation.
+I0110 17:57:24.746541 30938 net.cpp:323] pool1 needs backward computation.
+I0110 17:57:24.746546 30938 net.cpp:323] conv1b/relu needs backward computation.
+I0110 17:57:24.746551 30938 net.cpp:323] conv1b/bn needs backward computation.
+I0110 17:57:24.746557 30938 net.cpp:323] conv1b needs backward computation.
+I0110 17:57:24.746563 30938 net.cpp:323] conv1a/relu needs backward computation.
+I0110 17:57:24.746569 30938 net.cpp:323] conv1a/bn needs backward computation.
+I0110 17:57:24.746573 30938 net.cpp:323] conv1a needs backward computation.
+I0110 17:57:24.746579 30938 net.cpp:325] data/bias does not need backward computation.
+I0110 17:57:24.746587 30938 net.cpp:325] data does not need backward computation.
+I0110 17:57:24.746592 30938 net.cpp:367] This network produces output loss
+I0110 17:57:24.746650 30938 net.cpp:389] Top memory (TRAIN) required for data: 379194120 diff: 379194120
+I0110 17:57:24.746659 30938 net.cpp:392] Bottom memory (TRAIN) required for data: 379194112 diff: 379194112
+I0110 17:57:24.746665 30938 net.cpp:395] Shared (in-place) memory (TRAIN) by data: 234881024 diff: 234881024
+I0110 17:57:24.746668 30938 net.cpp:398] Parameters memory (TRAIN) required for data: 9479432 diff: 9479432
+I0110 17:57:24.746672 30938 net.cpp:401] Parameters shared memory (TRAIN) by data: 0 diff: 0
+I0110 17:57:24.746676 30938 net.cpp:407] Network initialization done.
+I0110 17:57:24.747537 30938 solver.cpp:177] Creating test net (#0) specified by test_net file: training/cifar10_jacintonet11v2_2018-01-10_17-57-15/initial/test.prototxt
+I0110 17:57:24.747901 30938 net.cpp:72] Initializing net from parameters: 
+name: "jacintonet11v2_test"
+state {
+  phase: TEST
+}
+layer {
+  name: "data"
+  type: "Data"
+  top: "data"
+  top: "label"
+  transform_param {
+    mirror: false
+    crop_size: 32
+    mean_value: 0
+    mean_value: 0
+    mean_value: 0
+  }
+  data_param {
+    source: "./data/cifar10_test_lmdb"
+    batch_size: 50
+    backend: LMDB
+    threads: 1
+    parser_threads: 1
+  }
+}
+layer {
+  name: "data/bias"
+  type: "Bias"
+  bottom: "data"
+  top: "data/bias"
+  param {
+    lr_mult: 0
+    decay_mult: 0
+  }
+  bias_param {
+    filler {
+      type: "constant"
+      value: -128
+    }
+  }
+}
+layer {
+  name: "conv1a"
+  type: "Convolution"
+  bottom: "data/bias"
+  top: "conv1a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 32
+    bias_term: true
+    pad: 2
+    kernel_size: 5
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "conv1a/bn"
+  type: "BatchNorm"
+  bottom: "conv1a"
+  top: "conv1a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "conv1a/relu"
+  type: "ReLU"
+  bottom: "conv1a"
+  top: "conv1a"
+}
+layer {
+  name: "conv1b"
+  type: "Convolution"
+  bottom: "conv1a"
+  top: "conv1b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 32
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "conv1b/bn"
+  type: "BatchNorm"
+  bottom: "conv1b"
+  top: "conv1b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "conv1b/relu"
+  type: "ReLU"
+  bottom: "conv1b"
+  top: "conv1b"
+}
+layer {
+  name: "pool1"
+  type: "Pooling"
+  bottom: "conv1b"
+  top: "pool1"
+  pooling_param {
+    pool: MAX
+    kernel_size: 1
+    stride: 1
+  }
+}
+layer {
+  name: "res2a_branch2a"
+  type: "Convolution"
+  bottom: "pool1"
+  top: "res2a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res2a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res2a_branch2a"
+  top: "res2a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res2a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res2a_branch2a"
+  top: "res2a_branch2a"
+}
+layer {
+  name: "res2a_branch2b"
+  type: "Convolution"
+  bottom: "res2a_branch2a"
+  top: "res2a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 64
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res2a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res2a_branch2b"
+  top: "res2a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res2a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res2a_branch2b"
+  top: "res2a_branch2b"
+}
+layer {
+  name: "pool2"
+  type: "Pooling"
+  bottom: "res2a_branch2b"
+  top: "pool2"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "res3a_branch2a"
+  type: "Convolution"
+  bottom: "pool2"
+  top: "res3a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res3a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res3a_branch2a"
+  top: "res3a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res3a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res3a_branch2a"
+  top: "res3a_branch2a"
+}
+layer {
+  name: "res3a_branch2b"
+  type: "Convolution"
+  bottom: "res3a_branch2a"
+  top: "res3a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 128
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res3a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res3a_branch2b"
+  top: "res3a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res3a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res3a_branch2b"
+  top: "res3a_branch2b"
+}
+layer {
+  name: "pool3"
+  type: "Pooling"
+  bottom: "res3a_branch2b"
+  top: "pool3"
+  pooling_param {
+    pool: MAX
+    kernel_size: 1
+    stride: 1
+  }
+}
+layer {
+  name: "res4a_branch2a"
+  type: "Convolution"
+  bottom: "pool3"
+  top: "res4a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res4a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res4a_branch2a"
+  top: "res4a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res4a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res4a_branch2a"
+  top: "res4a_branch2a"
+}
+layer {
+  name: "res4a_branch2b"
+  type: "Convolution"
+  bottom: "res4a_branch2a"
+  top: "res4a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 256
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res4a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res4a_branch2b"
+  top: "res4a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res4a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res4a_branch2b"
+  top: "res4a_branch2b"
+}
+layer {
+  name: "pool4"
+  type: "Pooling"
+  bottom: "res4a_branch2b"
+  top: "pool4"
+  pooling_param {
+    pool: MAX
+    kernel_size: 2
+    stride: 2
+  }
+}
+layer {
+  name: "res5a_branch2a"
+  type: "Convolution"
+  bottom: "pool4"
+  top: "res5a_branch2a"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 1
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res5a_branch2a/bn"
+  type: "BatchNorm"
+  bottom: "res5a_branch2a"
+  top: "res5a_branch2a"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res5a_branch2a/relu"
+  type: "ReLU"
+  bottom: "res5a_branch2a"
+  top: "res5a_branch2a"
+}
+layer {
+  name: "res5a_branch2b"
+  type: "Convolution"
+  bottom: "res5a_branch2a"
+  top: "res5a_branch2b"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  convolution_param {
+    num_output: 512
+    bias_term: true
+    pad: 1
+    kernel_size: 3
+    group: 4
+    stride: 1
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+    dilation: 1
+  }
+}
+layer {
+  name: "res5a_branch2b/bn"
+  type: "BatchNorm"
+  bottom: "res5a_branch2b"
+  top: "res5a_branch2b"
+  batch_norm_param {
+    moving_average_fraction: 0.99
+    eps: 0.0001
+    scale_bias: true
+  }
+}
+layer {
+  name: "res5a_branch2b/relu"
+  type: "ReLU"
+  bottom: "res5a_branch2b"
+  top: "res5a_branch2b"
+}
+layer {
+  name: "pool5"
+  type: "Pooling"
+  bottom: "res5a_branch2b"
+  top: "pool5"
+  pooling_param {
+    pool: AVE
+    global_pooling: true
+  }
+}
+layer {
+  name: "fc10"
+  type: "InnerProduct"
+  bottom: "pool5"
+  top: "fc10"
+  param {
+    lr_mult: 1
+    decay_mult: 1
+  }
+  param {
+    lr_mult: 2
+    decay_mult: 0
+  }
+  inner_product_param {
+    num_output: 10
+    weight_filler {
+      type: "msra"
+    }
+    bias_filler {
+      type: "constant"
+      value: 0
+    }
+  }
+}
+layer {
+  name: "loss"
+  type: "SoftmaxWithLoss"
+  bottom: "fc10"
+  bottom: "label"
+  top: "loss"
+  propagate_down: true
+  propagate_down: false
+}
+layer {
+  name: "accuracy/top1"
+  type: "Accuracy"
+  bottom: "fc10"
+  bottom: "label"
+  top: "accuracy/top1"
+  include {
+    phase: TEST
+  }
+}
+layer {
+  name: "accuracy/top5"
+  type: "Accuracy"
+  bottom: "fc10"
+  bottom: "label"
+  top: "accuracy/top5"
+  include {
+    phase: TEST
+  }
+  accuracy_param {
+    top_k: 5
+  }
+}
+I0110 17:57:24.748109 30938 net.cpp:104] Using FLOAT as default forward math type
+I0110 17:57:24.748121 30938 net.cpp:110] Using FLOAT as default backward math type
+I0110 17:57:24.748126 30938 layer_factory.hpp:136] Creating layer 'data' of type 'Data'
+I0110 17:57:24.748131 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.748155 30938 net.cpp:184] Created Layer data (0)
+I0110 17:57:24.748162 30938 net.cpp:530] data -> data
+I0110 17:57:24.748168 30938 net.cpp:530] data -> label
+I0110 17:57:24.748183 30938 data_reader.cpp:58] Data Reader threads: 1, out queues: 1, depth: 50
+I0110 17:57:24.748203 30938 internal_thread.cpp:19] Starting 1 internal thread(s) on device 1
+I0110 17:57:24.749402 30971 db_lmdb.cpp:24] Opened lmdb ./data/cifar10_test_lmdb
+I0110 17:57:24.749496 30938 data_layer.cpp:187] (1) ReshapePrefetch 50, 3, 32, 32
+I0110 17:57:24.749605 30938 data_layer.cpp:211] (1) Output data size: 50, 3, 32, 32
+I0110 17:57:24.749615 30938 internal_thread.cpp:19] Starting 1 internal thread(s) on device 1
+I0110 17:57:24.749670 30938 net.cpp:245] Setting up data
+I0110 17:57:24.749682 30938 net.cpp:252] TEST Top shape for layer 0 'data' 50 3 32 32 (153600)
+I0110 17:57:24.749689 30938 net.cpp:252] TEST Top shape for layer 0 'data' 50 (50)
+I0110 17:57:24.749696 30938 layer_factory.hpp:136] Creating layer 'label_data_1_split' of type 'Split'
+I0110 17:57:24.749701 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.750442 30972 data_layer.cpp:101] (1) Parser threads: 1
+I0110 17:57:24.750455 30972 data_layer.cpp:103] (1) Transformer threads: 1
+I0110 17:57:24.750946 30938 net.cpp:184] Created Layer label_data_1_split (1)
+I0110 17:57:24.750994 30938 net.cpp:561] label_data_1_split <- label
+I0110 17:57:24.751001 30938 net.cpp:530] label_data_1_split -> label_data_1_split_0
+I0110 17:57:24.751014 30938 net.cpp:530] label_data_1_split -> label_data_1_split_1
+I0110 17:57:24.751020 30938 net.cpp:530] label_data_1_split -> label_data_1_split_2
+I0110 17:57:24.752089 30938 net.cpp:245] Setting up label_data_1_split
+I0110 17:57:24.752107 30938 net.cpp:252] TEST Top shape for layer 1 'label_data_1_split' 50 (50)
+I0110 17:57:24.752115 30938 net.cpp:252] TEST Top shape for layer 1 'label_data_1_split' 50 (50)
+I0110 17:57:24.752120 30938 net.cpp:252] TEST Top shape for layer 1 'label_data_1_split' 50 (50)
+I0110 17:57:24.752126 30938 layer_factory.hpp:136] Creating layer 'data/bias' of type 'Bias'
+I0110 17:57:24.752132 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.752144 30938 net.cpp:184] Created Layer data/bias (2)
+I0110 17:57:24.752151 30938 net.cpp:561] data/bias <- data
+I0110 17:57:24.752157 30938 net.cpp:530] data/bias -> data/bias
+I0110 17:57:24.752395 30938 net.cpp:245] Setting up data/bias
+I0110 17:57:24.752410 30938 net.cpp:252] TEST Top shape for layer 2 'data/bias' 50 3 32 32 (153600)
+I0110 17:57:24.752421 30938 layer_factory.hpp:136] Creating layer 'conv1a' of type 'Convolution'
+I0110 17:57:24.752429 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.752449 30938 net.cpp:184] Created Layer conv1a (3)
+I0110 17:57:24.752456 30938 net.cpp:561] conv1a <- data/bias
+I0110 17:57:24.752462 30938 net.cpp:530] conv1a -> conv1a
+I0110 17:57:24.753836 30938 net.cpp:245] Setting up conv1a
+I0110 17:57:24.753852 30938 net.cpp:252] TEST Top shape for layer 3 'conv1a' 50 32 32 32 (1638400)
+I0110 17:57:24.753867 30938 layer_factory.hpp:136] Creating layer 'conv1a/bn' of type 'BatchNorm'
+I0110 17:57:24.753875 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.753885 30938 net.cpp:184] Created Layer conv1a/bn (4)
+I0110 17:57:24.753906 30938 net.cpp:561] conv1a/bn <- conv1a
+I0110 17:57:24.753916 30938 net.cpp:513] conv1a/bn -> conv1a (in-place)
+I0110 17:57:24.757961 30938 net.cpp:245] Setting up conv1a/bn
+I0110 17:57:24.757977 30938 net.cpp:252] TEST Top shape for layer 4 'conv1a/bn' 50 32 32 32 (1638400)
+I0110 17:57:24.757998 30938 layer_factory.hpp:136] Creating layer 'conv1a/relu' of type 'ReLU'
+I0110 17:57:24.758005 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.758020 30938 net.cpp:184] Created Layer conv1a/relu (5)
+I0110 17:57:24.758028 30938 net.cpp:561] conv1a/relu <- conv1a
+I0110 17:57:24.758033 30938 net.cpp:513] conv1a/relu -> conv1a (in-place)
+I0110 17:57:24.758040 30938 net.cpp:245] Setting up conv1a/relu
+I0110 17:57:24.758049 30938 net.cpp:252] TEST Top shape for layer 5 'conv1a/relu' 50 32 32 32 (1638400)
+I0110 17:57:24.758054 30938 layer_factory.hpp:136] Creating layer 'conv1b' of type 'Convolution'
+I0110 17:57:24.758061 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.758082 30938 net.cpp:184] Created Layer conv1b (6)
+I0110 17:57:24.758090 30938 net.cpp:561] conv1b <- conv1a
+I0110 17:57:24.758095 30938 net.cpp:530] conv1b -> conv1b
+I0110 17:57:24.758698 30938 net.cpp:245] Setting up conv1b
+I0110 17:57:24.758713 30938 net.cpp:252] TEST Top shape for layer 6 'conv1b' 50 32 32 32 (1638400)
+I0110 17:57:24.758728 30938 layer_factory.hpp:136] Creating layer 'conv1b/bn' of type 'BatchNorm'
+I0110 17:57:24.758736 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.758745 30938 net.cpp:184] Created Layer conv1b/bn (7)
+I0110 17:57:24.758752 30938 net.cpp:561] conv1b/bn <- conv1b
+I0110 17:57:24.758759 30938 net.cpp:513] conv1b/bn -> conv1b (in-place)
+I0110 17:57:24.761808 30938 net.cpp:245] Setting up conv1b/bn
+I0110 17:57:24.761824 30938 net.cpp:252] TEST Top shape for layer 7 'conv1b/bn' 50 32 32 32 (1638400)
+I0110 17:57:24.761837 30938 layer_factory.hpp:136] Creating layer 'conv1b/relu' of type 'ReLU'
+I0110 17:57:24.761845 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.761858 30938 net.cpp:184] Created Layer conv1b/relu (8)
+I0110 17:57:24.761865 30938 net.cpp:561] conv1b/relu <- conv1b
+I0110 17:57:24.761871 30938 net.cpp:513] conv1b/relu -> conv1b (in-place)
+I0110 17:57:24.761878 30938 net.cpp:245] Setting up conv1b/relu
+I0110 17:57:24.761883 30938 net.cpp:252] TEST Top shape for layer 8 'conv1b/relu' 50 32 32 32 (1638400)
+I0110 17:57:24.761890 30938 layer_factory.hpp:136] Creating layer 'pool1' of type 'Pooling'
+I0110 17:57:24.761898 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.761909 30938 net.cpp:184] Created Layer pool1 (9)
+I0110 17:57:24.761915 30938 net.cpp:561] pool1 <- conv1b
+I0110 17:57:24.761922 30938 net.cpp:530] pool1 -> pool1
+I0110 17:57:24.761991 30938 net.cpp:245] Setting up pool1
+I0110 17:57:24.762002 30938 net.cpp:252] TEST Top shape for layer 9 'pool1' 50 32 32 32 (1638400)
+I0110 17:57:24.762010 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2a' of type 'Convolution'
+I0110 17:57:24.762017 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.762037 30938 net.cpp:184] Created Layer res2a_branch2a (10)
+I0110 17:57:24.762043 30938 net.cpp:561] res2a_branch2a <- pool1
+I0110 17:57:24.762049 30938 net.cpp:530] res2a_branch2a -> res2a_branch2a
+I0110 17:57:24.763185 30938 net.cpp:245] Setting up res2a_branch2a
+I0110 17:57:24.763203 30938 net.cpp:252] TEST Top shape for layer 10 'res2a_branch2a' 50 64 32 32 (3276800)
+I0110 17:57:24.763216 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2a/bn' of type 'BatchNorm'
+I0110 17:57:24.763223 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.763232 30938 net.cpp:184] Created Layer res2a_branch2a/bn (11)
+I0110 17:57:24.763238 30938 net.cpp:561] res2a_branch2a/bn <- res2a_branch2a
+I0110 17:57:24.763259 30938 net.cpp:513] res2a_branch2a/bn -> res2a_branch2a (in-place)
+I0110 17:57:24.765687 30938 net.cpp:245] Setting up res2a_branch2a/bn
+I0110 17:57:24.765704 30938 net.cpp:252] TEST Top shape for layer 11 'res2a_branch2a/bn' 50 64 32 32 (3276800)
+I0110 17:57:24.765719 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2a/relu' of type 'ReLU'
+I0110 17:57:24.765727 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.765735 30938 net.cpp:184] Created Layer res2a_branch2a/relu (12)
+I0110 17:57:24.765741 30938 net.cpp:561] res2a_branch2a/relu <- res2a_branch2a
+I0110 17:57:24.765748 30938 net.cpp:513] res2a_branch2a/relu -> res2a_branch2a (in-place)
+I0110 17:57:24.765759 30938 net.cpp:245] Setting up res2a_branch2a/relu
+I0110 17:57:24.765766 30938 net.cpp:252] TEST Top shape for layer 12 'res2a_branch2a/relu' 50 64 32 32 (3276800)
+I0110 17:57:24.765774 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2b' of type 'Convolution'
+I0110 17:57:24.765779 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.765800 30938 net.cpp:184] Created Layer res2a_branch2b (13)
+I0110 17:57:24.765807 30938 net.cpp:561] res2a_branch2b <- res2a_branch2a
+I0110 17:57:24.765813 30938 net.cpp:530] res2a_branch2b -> res2a_branch2b
+I0110 17:57:24.766801 30938 net.cpp:245] Setting up res2a_branch2b
+I0110 17:57:24.766816 30938 net.cpp:252] TEST Top shape for layer 13 'res2a_branch2b' 50 64 32 32 (3276800)
+I0110 17:57:24.766827 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2b/bn' of type 'BatchNorm'
+I0110 17:57:24.766834 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.766846 30938 net.cpp:184] Created Layer res2a_branch2b/bn (14)
+I0110 17:57:24.766854 30938 net.cpp:561] res2a_branch2b/bn <- res2a_branch2b
+I0110 17:57:24.766860 30938 net.cpp:513] res2a_branch2b/bn -> res2a_branch2b (in-place)
+I0110 17:57:24.771948 30938 net.cpp:245] Setting up res2a_branch2b/bn
+I0110 17:57:24.771965 30938 net.cpp:252] TEST Top shape for layer 14 'res2a_branch2b/bn' 50 64 32 32 (3276800)
+I0110 17:57:24.771982 30938 layer_factory.hpp:136] Creating layer 'res2a_branch2b/relu' of type 'ReLU'
+I0110 17:57:24.771989 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.771999 30938 net.cpp:184] Created Layer res2a_branch2b/relu (15)
+I0110 17:57:24.772006 30938 net.cpp:561] res2a_branch2b/relu <- res2a_branch2b
+I0110 17:57:24.772013 30938 net.cpp:513] res2a_branch2b/relu -> res2a_branch2b (in-place)
+I0110 17:57:24.772020 30938 net.cpp:245] Setting up res2a_branch2b/relu
+I0110 17:57:24.772028 30938 net.cpp:252] TEST Top shape for layer 15 'res2a_branch2b/relu' 50 64 32 32 (3276800)
+I0110 17:57:24.772034 30938 layer_factory.hpp:136] Creating layer 'pool2' of type 'Pooling'
+I0110 17:57:24.772040 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.772055 30938 net.cpp:184] Created Layer pool2 (16)
+I0110 17:57:24.772063 30938 net.cpp:561] pool2 <- res2a_branch2b
+I0110 17:57:24.772068 30938 net.cpp:530] pool2 -> pool2
+I0110 17:57:24.772141 30938 net.cpp:245] Setting up pool2
+I0110 17:57:24.772155 30938 net.cpp:252] TEST Top shape for layer 16 'pool2' 50 64 16 16 (819200)
+I0110 17:57:24.772161 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2a' of type 'Convolution'
+I0110 17:57:24.772167 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.772187 30938 net.cpp:184] Created Layer res3a_branch2a (17)
+I0110 17:57:24.772195 30938 net.cpp:561] res3a_branch2a <- pool2
+I0110 17:57:24.772202 30938 net.cpp:530] res3a_branch2a -> res3a_branch2a
+I0110 17:57:24.775007 30938 net.cpp:245] Setting up res3a_branch2a
+I0110 17:57:24.775023 30938 net.cpp:252] TEST Top shape for layer 17 'res3a_branch2a' 50 128 16 16 (1638400)
+I0110 17:57:24.775033 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2a/bn' of type 'BatchNorm'
+I0110 17:57:24.775061 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.775076 30938 net.cpp:184] Created Layer res3a_branch2a/bn (18)
+I0110 17:57:24.775085 30938 net.cpp:561] res3a_branch2a/bn <- res3a_branch2a
+I0110 17:57:24.775091 30938 net.cpp:513] res3a_branch2a/bn -> res3a_branch2a (in-place)
+I0110 17:57:24.779248 30938 net.cpp:245] Setting up res3a_branch2a/bn
+I0110 17:57:24.779264 30938 net.cpp:252] TEST Top shape for layer 18 'res3a_branch2a/bn' 50 128 16 16 (1638400)
+I0110 17:57:24.779290 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2a/relu' of type 'ReLU'
+I0110 17:57:24.779299 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.779306 30938 net.cpp:184] Created Layer res3a_branch2a/relu (19)
+I0110 17:57:24.779314 30938 net.cpp:561] res3a_branch2a/relu <- res3a_branch2a
+I0110 17:57:24.779320 30938 net.cpp:513] res3a_branch2a/relu -> res3a_branch2a (in-place)
+I0110 17:57:24.779326 30938 net.cpp:245] Setting up res3a_branch2a/relu
+I0110 17:57:24.779333 30938 net.cpp:252] TEST Top shape for layer 19 'res3a_branch2a/relu' 50 128 16 16 (1638400)
+I0110 17:57:24.779340 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2b' of type 'Convolution'
+I0110 17:57:24.779346 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.779366 30938 net.cpp:184] Created Layer res3a_branch2b (20)
+I0110 17:57:24.779373 30938 net.cpp:561] res3a_branch2b <- res3a_branch2a
+I0110 17:57:24.779379 30938 net.cpp:530] res3a_branch2b -> res3a_branch2b
+I0110 17:57:24.781554 30938 net.cpp:245] Setting up res3a_branch2b
+I0110 17:57:24.781569 30938 net.cpp:252] TEST Top shape for layer 20 'res3a_branch2b' 50 128 16 16 (1638400)
+I0110 17:57:24.781579 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2b/bn' of type 'BatchNorm'
+I0110 17:57:24.781587 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.781599 30938 net.cpp:184] Created Layer res3a_branch2b/bn (21)
+I0110 17:57:24.781606 30938 net.cpp:561] res3a_branch2b/bn <- res3a_branch2b
+I0110 17:57:24.781613 30938 net.cpp:513] res3a_branch2b/bn -> res3a_branch2b (in-place)
+I0110 17:57:24.787974 30938 net.cpp:245] Setting up res3a_branch2b/bn
+I0110 17:57:24.787998 30938 net.cpp:252] TEST Top shape for layer 21 'res3a_branch2b/bn' 50 128 16 16 (1638400)
+I0110 17:57:24.788015 30938 layer_factory.hpp:136] Creating layer 'res3a_branch2b/relu' of type 'ReLU'
+I0110 17:57:24.788023 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.788038 30938 net.cpp:184] Created Layer res3a_branch2b/relu (22)
+I0110 17:57:24.788044 30938 net.cpp:561] res3a_branch2b/relu <- res3a_branch2b
+I0110 17:57:24.788054 30938 net.cpp:513] res3a_branch2b/relu -> res3a_branch2b (in-place)
+I0110 17:57:24.788065 30938 net.cpp:245] Setting up res3a_branch2b/relu
+I0110 17:57:24.788074 30938 net.cpp:252] TEST Top shape for layer 22 'res3a_branch2b/relu' 50 128 16 16 (1638400)
+I0110 17:57:24.788079 30938 layer_factory.hpp:136] Creating layer 'pool3' of type 'Pooling'
+I0110 17:57:24.788086 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.788099 30938 net.cpp:184] Created Layer pool3 (23)
+I0110 17:57:24.788105 30938 net.cpp:561] pool3 <- res3a_branch2b
+I0110 17:57:24.788111 30938 net.cpp:530] pool3 -> pool3
+I0110 17:57:24.788180 30938 net.cpp:245] Setting up pool3
+I0110 17:57:24.788192 30938 net.cpp:252] TEST Top shape for layer 23 'pool3' 50 128 16 16 (1638400)
+I0110 17:57:24.788200 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2a' of type 'Convolution'
+I0110 17:57:24.788206 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.788228 30938 net.cpp:184] Created Layer res4a_branch2a (24)
+I0110 17:57:24.788235 30938 net.cpp:561] res4a_branch2a <- pool3
+I0110 17:57:24.788256 30938 net.cpp:530] res4a_branch2a -> res4a_branch2a
+I0110 17:57:24.797533 30938 net.cpp:245] Setting up res4a_branch2a
+I0110 17:57:24.797552 30938 net.cpp:252] TEST Top shape for layer 24 'res4a_branch2a' 50 256 16 16 (3276800)
+I0110 17:57:24.797564 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2a/bn' of type 'BatchNorm'
+I0110 17:57:24.797574 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.797586 30938 net.cpp:184] Created Layer res4a_branch2a/bn (25)
+I0110 17:57:24.797595 30938 net.cpp:561] res4a_branch2a/bn <- res4a_branch2a
+I0110 17:57:24.797603 30938 net.cpp:513] res4a_branch2a/bn -> res4a_branch2a (in-place)
+I0110 17:57:24.799993 30938 net.cpp:245] Setting up res4a_branch2a/bn
+I0110 17:57:24.800009 30938 net.cpp:252] TEST Top shape for layer 25 'res4a_branch2a/bn' 50 256 16 16 (3276800)
+I0110 17:57:24.800021 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2a/relu' of type 'ReLU'
+I0110 17:57:24.800029 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.800037 30938 net.cpp:184] Created Layer res4a_branch2a/relu (26)
+I0110 17:57:24.800045 30938 net.cpp:561] res4a_branch2a/relu <- res4a_branch2a
+I0110 17:57:24.800052 30938 net.cpp:513] res4a_branch2a/relu -> res4a_branch2a (in-place)
+I0110 17:57:24.800058 30938 net.cpp:245] Setting up res4a_branch2a/relu
+I0110 17:57:24.800065 30938 net.cpp:252] TEST Top shape for layer 26 'res4a_branch2a/relu' 50 256 16 16 (3276800)
+I0110 17:57:24.800076 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2b' of type 'Convolution'
+I0110 17:57:24.800081 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.800099 30938 net.cpp:184] Created Layer res4a_branch2b (27)
+I0110 17:57:24.800109 30938 net.cpp:561] res4a_branch2b <- res4a_branch2a
+I0110 17:57:24.800115 30938 net.cpp:530] res4a_branch2b -> res4a_branch2b
+I0110 17:57:24.806561 30938 net.cpp:245] Setting up res4a_branch2b
+I0110 17:57:24.806582 30938 net.cpp:252] TEST Top shape for layer 27 'res4a_branch2b' 50 256 16 16 (3276800)
+I0110 17:57:24.806592 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2b/bn' of type 'BatchNorm'
+I0110 17:57:24.806599 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.806610 30938 net.cpp:184] Created Layer res4a_branch2b/bn (28)
+I0110 17:57:24.806617 30938 net.cpp:561] res4a_branch2b/bn <- res4a_branch2b
+I0110 17:57:24.806623 30938 net.cpp:513] res4a_branch2b/bn -> res4a_branch2b (in-place)
+I0110 17:57:24.809042 30938 net.cpp:245] Setting up res4a_branch2b/bn
+I0110 17:57:24.809058 30938 net.cpp:252] TEST Top shape for layer 28 'res4a_branch2b/bn' 50 256 16 16 (3276800)
+I0110 17:57:24.809074 30938 layer_factory.hpp:136] Creating layer 'res4a_branch2b/relu' of type 'ReLU'
+I0110 17:57:24.809082 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.809089 30938 net.cpp:184] Created Layer res4a_branch2b/relu (29)
+I0110 17:57:24.809094 30938 net.cpp:561] res4a_branch2b/relu <- res4a_branch2b
+I0110 17:57:24.809100 30938 net.cpp:513] res4a_branch2b/relu -> res4a_branch2b (in-place)
+I0110 17:57:24.809109 30938 net.cpp:245] Setting up res4a_branch2b/relu
+I0110 17:57:24.809115 30938 net.cpp:252] TEST Top shape for layer 29 'res4a_branch2b/relu' 50 256 16 16 (3276800)
+I0110 17:57:24.809121 30938 layer_factory.hpp:136] Creating layer 'pool4' of type 'Pooling'
+I0110 17:57:24.809126 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.809136 30938 net.cpp:184] Created Layer pool4 (30)
+I0110 17:57:24.809150 30938 net.cpp:561] pool4 <- res4a_branch2b
+I0110 17:57:24.809156 30938 net.cpp:530] pool4 -> pool4
+I0110 17:57:24.809227 30938 net.cpp:245] Setting up pool4
+I0110 17:57:24.809239 30938 net.cpp:252] TEST Top shape for layer 30 'pool4' 50 256 8 8 (819200)
+I0110 17:57:24.809247 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2a' of type 'Convolution'
+I0110 17:57:24.809265 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.809288 30938 net.cpp:184] Created Layer res5a_branch2a (31)
+I0110 17:57:24.809294 30938 net.cpp:561] res5a_branch2a <- pool4
+I0110 17:57:24.809300 30938 net.cpp:530] res5a_branch2a -> res5a_branch2a
+I0110 17:57:24.847296 30938 net.cpp:245] Setting up res5a_branch2a
+I0110 17:57:24.847324 30938 net.cpp:252] TEST Top shape for layer 31 'res5a_branch2a' 50 512 8 8 (1638400)
+I0110 17:57:24.847337 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2a/bn' of type 'BatchNorm'
+I0110 17:57:24.847343 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.847354 30938 net.cpp:184] Created Layer res5a_branch2a/bn (32)
+I0110 17:57:24.847362 30938 net.cpp:561] res5a_branch2a/bn <- res5a_branch2a
+I0110 17:57:24.847368 30938 net.cpp:513] res5a_branch2a/bn -> res5a_branch2a (in-place)
+I0110 17:57:24.849730 30938 net.cpp:245] Setting up res5a_branch2a/bn
+I0110 17:57:24.849747 30938 net.cpp:252] TEST Top shape for layer 32 'res5a_branch2a/bn' 50 512 8 8 (1638400)
+I0110 17:57:24.849761 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2a/relu' of type 'ReLU'
+I0110 17:57:24.849767 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.849776 30938 net.cpp:184] Created Layer res5a_branch2a/relu (33)
+I0110 17:57:24.849781 30938 net.cpp:561] res5a_branch2a/relu <- res5a_branch2a
+I0110 17:57:24.849786 30938 net.cpp:513] res5a_branch2a/relu -> res5a_branch2a (in-place)
+I0110 17:57:24.849793 30938 net.cpp:245] Setting up res5a_branch2a/relu
+I0110 17:57:24.849799 30938 net.cpp:252] TEST Top shape for layer 33 'res5a_branch2a/relu' 50 512 8 8 (1638400)
+I0110 17:57:24.849804 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2b' of type 'Convolution'
+I0110 17:57:24.849809 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.849829 30938 net.cpp:184] Created Layer res5a_branch2b (34)
+I0110 17:57:24.849836 30938 net.cpp:561] res5a_branch2b <- res5a_branch2a
+I0110 17:57:24.849843 30938 net.cpp:530] res5a_branch2b -> res5a_branch2b
+I0110 17:57:24.869554 30938 net.cpp:245] Setting up res5a_branch2b
+I0110 17:57:24.869576 30938 net.cpp:252] TEST Top shape for layer 34 'res5a_branch2b' 50 512 8 8 (1638400)
+I0110 17:57:24.869598 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2b/bn' of type 'BatchNorm'
+I0110 17:57:24.869606 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.869616 30938 net.cpp:184] Created Layer res5a_branch2b/bn (35)
+I0110 17:57:24.869621 30938 net.cpp:561] res5a_branch2b/bn <- res5a_branch2b
+I0110 17:57:24.869628 30938 net.cpp:513] res5a_branch2b/bn -> res5a_branch2b (in-place)
+I0110 17:57:24.874037 30938 net.cpp:245] Setting up res5a_branch2b/bn
+I0110 17:57:24.874058 30938 net.cpp:252] TEST Top shape for layer 35 'res5a_branch2b/bn' 50 512 8 8 (1638400)
+I0110 17:57:24.874070 30938 layer_factory.hpp:136] Creating layer 'res5a_branch2b/relu' of type 'ReLU'
+I0110 17:57:24.874076 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.874084 30938 net.cpp:184] Created Layer res5a_branch2b/relu (36)
+I0110 17:57:24.874089 30938 net.cpp:561] res5a_branch2b/relu <- res5a_branch2b
+I0110 17:57:24.874095 30938 net.cpp:513] res5a_branch2b/relu -> res5a_branch2b (in-place)
+I0110 17:57:24.874102 30938 net.cpp:245] Setting up res5a_branch2b/relu
+I0110 17:57:24.874109 30938 net.cpp:252] TEST Top shape for layer 36 'res5a_branch2b/relu' 50 512 8 8 (1638400)
+I0110 17:57:24.874114 30938 layer_factory.hpp:136] Creating layer 'pool5' of type 'Pooling'
+I0110 17:57:24.874119 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.874130 30938 net.cpp:184] Created Layer pool5 (37)
+I0110 17:57:24.874150 30938 net.cpp:561] pool5 <- res5a_branch2b
+I0110 17:57:24.874171 30938 net.cpp:530] pool5 -> pool5
+I0110 17:57:24.874217 30938 net.cpp:245] Setting up pool5
+I0110 17:57:24.874233 30938 net.cpp:252] TEST Top shape for layer 37 'pool5' 50 512 1 1 (25600)
+I0110 17:57:24.874238 30938 layer_factory.hpp:136] Creating layer 'fc10' of type 'InnerProduct'
+I0110 17:57:24.874244 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.874254 30938 net.cpp:184] Created Layer fc10 (38)
+I0110 17:57:24.874260 30938 net.cpp:561] fc10 <- pool5
+I0110 17:57:24.874266 30938 net.cpp:530] fc10 -> fc10
+I0110 17:57:24.874802 30938 net.cpp:245] Setting up fc10
+I0110 17:57:24.874817 30938 net.cpp:252] TEST Top shape for layer 38 'fc10' 50 10 (500)
+I0110 17:57:24.874826 30938 layer_factory.hpp:136] Creating layer 'fc10_fc10_0_split' of type 'Split'
+I0110 17:57:24.874833 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.874841 30938 net.cpp:184] Created Layer fc10_fc10_0_split (39)
+I0110 17:57:24.874847 30938 net.cpp:561] fc10_fc10_0_split <- fc10
+I0110 17:57:24.874853 30938 net.cpp:530] fc10_fc10_0_split -> fc10_fc10_0_split_0
+I0110 17:57:24.874860 30938 net.cpp:530] fc10_fc10_0_split -> fc10_fc10_0_split_1
+I0110 17:57:24.874866 30938 net.cpp:530] fc10_fc10_0_split -> fc10_fc10_0_split_2
+I0110 17:57:24.874961 30938 net.cpp:245] Setting up fc10_fc10_0_split
+I0110 17:57:24.874974 30938 net.cpp:252] TEST Top shape for layer 39 'fc10_fc10_0_split' 50 10 (500)
+I0110 17:57:24.874981 30938 net.cpp:252] TEST Top shape for layer 39 'fc10_fc10_0_split' 50 10 (500)
+I0110 17:57:24.874986 30938 net.cpp:252] TEST Top shape for layer 39 'fc10_fc10_0_split' 50 10 (500)
+I0110 17:57:24.874992 30938 layer_factory.hpp:136] Creating layer 'loss' of type 'SoftmaxWithLoss'
+I0110 17:57:24.874997 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.875010 30938 net.cpp:184] Created Layer loss (40)
+I0110 17:57:24.875015 30938 net.cpp:561] loss <- fc10_fc10_0_split_0
+I0110 17:57:24.875021 30938 net.cpp:561] loss <- label_data_1_split_0
+I0110 17:57:24.875028 30938 net.cpp:530] loss -> loss
+I0110 17:57:24.875449 30938 net.cpp:245] Setting up loss
+I0110 17:57:24.875468 30938 net.cpp:252] TEST Top shape for layer 40 'loss' (1)
+I0110 17:57:24.875473 30938 net.cpp:256]     with loss weight 1
+I0110 17:57:24.875486 30938 layer_factory.hpp:136] Creating layer 'accuracy/top1' of type 'Accuracy'
+I0110 17:57:24.875493 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.875511 30938 net.cpp:184] Created Layer accuracy/top1 (41)
+I0110 17:57:24.875517 30938 net.cpp:561] accuracy/top1 <- fc10_fc10_0_split_1
+I0110 17:57:24.875524 30938 net.cpp:561] accuracy/top1 <- label_data_1_split_1
+I0110 17:57:24.875530 30938 net.cpp:530] accuracy/top1 -> accuracy/top1
+I0110 17:57:24.875545 30938 net.cpp:245] Setting up accuracy/top1
+I0110 17:57:24.875555 30938 net.cpp:252] TEST Top shape for layer 41 'accuracy/top1' (1)
+I0110 17:57:24.875561 30938 layer_factory.hpp:136] Creating layer 'accuracy/top5' of type 'Accuracy'
+I0110 17:57:24.875566 30938 layer_factory.hpp:148] Layer's types are Ftype:FLOAT Btype:FLOAT Fmath:FLOAT Bmath:FLOAT
+I0110 17:57:24.875578 30938 net.cpp:184] Created Layer accuracy/top5 (42)
+I0110 17:57:24.875586 30938 net.cpp:561] accuracy/top5 <- fc10_fc10_0_split_2
+I0110 17:57:24.875591 30938 net.cpp:561] accuracy/top5 <- label_data_1_split_2
+I0110 17:57:24.875597 30938 net.cpp:530] accuracy/top5 -> accuracy/top5
+I0110 17:57:24.875607 30938 net.cpp:245] Setting up accuracy/top5
+I0110 17:57:24.875614 30938 net.cpp:252] TEST Top shape for layer 42 'accuracy/top5' (1)
+I0110 17:57:24.875620 30938 net.cpp:325] accuracy/top5 does not need backward computation.
+I0110 17:57:24.875625 30938 net.cpp:325] accuracy/top1 does not need backward computation.
+I0110 17:57:24.875630 30938 net.cpp:323] loss needs backward computation.
+I0110 17:57:24.875634 30938 net.cpp:323] fc10_fc10_0_split needs backward computation.
+I0110 17:57:24.875653 30938 net.cpp:323] fc10 needs backward computation.
+I0110 17:57:24.875661 30938 net.cpp:323] pool5 needs backward computation.
+I0110 17:57:24.875668 30938 net.cpp:323] res5a_branch2b/relu needs backward computation.
+I0110 17:57:24.875674 30938 net.cpp:323] res5a_branch2b/bn needs backward computation.
+I0110 17:57:24.875677 30938 net.cpp:323] res5a_branch2b needs backward computation.
+I0110 17:57:24.875684 30938 net.cpp:323] res5a_branch2a/relu needs backward computation.
+I0110 17:57:24.875689 30938 net.cpp:323] res5a_branch2a/bn needs backward computation.
+I0110 17:57:24.875695 30938 net.cpp:323] res5a_branch2a needs backward computation.
+I0110 17:57:24.875700 30938 net.cpp:323] pool4 needs backward computation.
+I0110 17:57:24.875706 30938 net.cpp:323] res4a_branch2b/relu needs backward computation.
+I0110 17:57:24.875711 30938 net.cpp:323] res4a_branch2b/bn needs backward computation.
+I0110 17:57:24.875716 30938 net.cpp:323] res4a_branch2b needs backward computation.
+I0110 17:57:24.875722 30938 net.cpp:323] res4a_branch2a/relu needs backward computation.
+I0110 17:57:24.875727 30938 net.cpp:323] res4a_branch2a/bn needs backward computation.
+I0110 17:57:24.875733 30938 net.cpp:323] res4a_branch2a needs backward computation.
+I0110 17:57:24.875739 30938 net.cpp:323] pool3 needs backward computation.
+I0110 17:57:24.875746 30938 net.cpp:323] res3a_branch2b/relu needs backward computation.
+I0110 17:57:24.875751 30938 net.cpp:323] res3a_branch2b/bn needs backward computation.
+I0110 17:57:24.875756 30938 net.cpp:323] res3a_branch2b needs backward computation.
+I0110 17:57:24.875762 30938 net.cpp:323] res3a_branch2a/relu needs backward computation.
+I0110 17:57:24.875768 30938 net.cpp:323] res3a_branch2a/bn needs backward computation.
+I0110 17:57:24.875774 30938 net.cpp:323] res3a_branch2a needs backward computation.
+I0110 17:57:24.875780 30938 net.cpp:323] pool2 needs backward computation.
+I0110 17:57:24.875787 30938 net.cpp:323] res2a_branch2b/relu needs backward computation.
+I0110 17:57:24.875792 30938 net.cpp:323] res2a_branch2b/bn needs backward computation.
+I0110 17:57:24.875797 30938 net.cpp:323] res2a_branch2b needs backward computation.
+I0110 17:57:24.875803 30938 net.cpp:323] res2a_branch2a/relu needs backward computation.
+I0110 17:57:24.875808 30938 net.cpp:323] res2a_branch2a/bn needs backward computation.
+I0110 17:57:24.875814 30938 net.cpp:323] res2a_branch2a needs backward computation.
+I0110 17:57:24.875820 30938 net.cpp:323] pool1 needs backward computation.
+I0110 17:57:24.875826 30938 net.cpp:323] conv1b/relu needs backward computation.
+I0110 17:57:24.875833 30938 net.cpp:323] conv1b/bn needs backward computation.
+I0110 17:57:24.875838 30938 net.cpp:323] conv1b needs backward computation.
+I0110 17:57:24.875844 30938 net.cpp:323] conv1a/relu needs backward computation.
+I0110 17:57:24.875849 30938 net.cpp:323] conv1a/bn needs backward computation.
+I0110 17:57:24.875855 30938 net.cpp:323] conv1a needs backward computation.
+I0110 17:57:24.875861 30938 net.cpp:325] data/bias does not need backward computation.
+I0110 17:57:24.875867 30938 net.cpp:325] label_data_1_split does not need backward computation.
+I0110 17:57:24.875874 30938 net.cpp:325] data does not need backward computation.
+I0110 17:57:24.875880 30938 net.cpp:367] This network produces output accuracy/top1
+I0110 17:57:24.875885 30938 net.cpp:367] This network produces output accuracy/top5
+I0110 17:57:24.875890 30938 net.cpp:367] This network produces output loss
+I0110 17:57:24.875952 30938 net.cpp:389] Top memory (TEST) required for data: 296252024 diff: 296252024
+I0110 17:57:24.875959 30938 net.cpp:392] Bottom memory (TEST) required for data: 296252000 diff: 296252000
+I0110 17:57:24.875963 30938 net.cpp:395] Shared (in-place) memory (TEST) by data: 183500800 diff: 183500800
+I0110 17:57:24.875969 30938 net.cpp:398] Parameters memory (TEST) required for data: 9479432 diff: 9479432
+I0110 17:57:24.875973 30938 net.cpp:401] Parameters shared memory (TEST) by data: 0 diff: 0
+I0110 17:57:24.875978 30938 net.cpp:407] Network initialization done.
+I0110 17:57:24.876138 30938 solver.cpp:57] Solver scaffolding done.
+I0110 17:57:24.881415 30938 caffe.cpp:242] Starting Optimization
+I0110 17:57:24.881433 30938 solver.cpp:486] Solving jacintonet11v2_train
+I0110 17:57:24.881443 30938 solver.cpp:487] Learning Rate Policy: poly
+I0110 17:57:24.886234 30938 net.cpp:1412] [1] Reserving 9483776 bytes of shared learnable space
+I0110 17:57:24.886999 30938 solver.cpp:559] Iteration 0, Testing net (#0)
+I0110 17:57:24.888272 30973 device_alternate.hpp:116] NVML initialized on thread 140594193487616
+I0110 17:57:24.992038 30973 common.cpp:585] NVML succeeded to set CPU affinity on device 1
+I0110 17:57:25.461853 30938 solver.cpp:651]     Test net output #0: accuracy/top1 = 0.08
+I0110 17:57:25.461899 30938 solver.cpp:651]     Test net output #1: accuracy/top5 = 0.38
+I0110 17:57:25.461913 30938 solver.cpp:651]     Test net output #2: loss = 80.3496 (* 1 = 80.3496 loss)
+I0110 17:57:25.461921 30938 solver.cpp:255] Initial Test completed
+I0110 17:57:25.461947 30938 blocking_queue.cpp:40] Data layer prefetch queue empty
+I0110 17:57:26.640389 30970 data_layer.cpp:101] [1] Parser threads: 1
+I0110 17:57:26.640419 30970 data_layer.cpp:103] [1] Transformer threads: 1
+I0110 17:57:26.640568 30938 solver.cpp:319] Iteration 0 (1.17857 s), loss = 2.40151
+I0110 17:57:26.640597 30938 solver.cpp:336]     Train net output #0: loss = 2.40151 (* 1 = 2.40151 loss)
+I0110 17:57:26.640606 30938 sgd_solver.cpp:136] Iteration 0, lr = 0.1, m = 0.9
+I0110 17:57:26.911375 30938 solver.cpp:319] Iteration 1 (0.270792 s), loss = 2.16775
+I0110 17:57:26.911420 30938 solver.cpp:336]     Train net output #0: loss = 2.16775 (* 1 = 2.16775 loss)
+I0110 17:57:27.182193 30938 solver.cpp:319] Iteration 2 (0.270802 s), loss = 2.45394
+I0110 17:57:27.182236 30938 solver.cpp:336]     Train net output #0: loss = 2.45394 (* 1 = 2.45394 loss)
+I0110 17:59:10.043984 30938 solver.cpp:314] Iteration 100 (0.952742 iter/s, 102.861s/98 iter), loss = 1.74199
+I0110 17:59:10.044098 30938 solver.cpp:336]     Train net output #0: loss = 1.74199 (* 1 = 1.74199 loss)
+I0110 17:59:10.044109 30938 sgd_solver.cpp:136] Iteration 100, lr = 0.0998438, m = 0.9
+I0110 18:00:59.474078 30938 solver.cpp:314] Iteration 200 (0.913833 iter/s, 109.429s/100 iter), loss = 1.35691
+I0110 18:00:59.474359 30938 solver.cpp:336]     Train net output #0: loss = 1.35691 (* 1 = 1.35691 loss)
+I0110 18:00:59.474371 30938 sgd_solver.cpp:136] Iteration 200, lr = 0.0996875, m = 0.9
+I0110 18:02:48.799947 30938 solver.cpp:314] Iteration 300 (0.914705 iter/s, 109.325s/100 iter), loss = 1.37856
+I0110 18:02:48.800252 30938 solver.cpp:336]     Train net output #0: loss = 1.37856 (* 1 = 1.37856 loss)
+I0110 18:02:48.800279 30938 sgd_solver.cpp:136] Iteration 300, lr = 0.0995313, m = 0.9
+I0110 18:04:38.952962 30938 solver.cpp:314] Iteration 400 (0.907836 iter/s, 110.152s/100 iter), loss = 1.22795
+I0110 18:04:38.953181 30938 solver.cpp:336]     Train net output #0: loss = 1.22795 (* 1 = 1.22795 loss)
+I0110 18:04:38.953193 30938 sgd_solver.cpp:136] Iteration 400, lr = 0.099375, m = 0.9
+I0110 18:06:28.689872 30938 solver.cpp:314] Iteration 500 (0.911278 iter/s, 109.736s/100 iter), loss = 1.27691
+I0110 18:06:28.690114 30938 solver.cpp:336]     Train net output #0: loss = 1.27691 (* 1 = 1.27691 loss)
+I0110 18:06:28.690131 30938 sgd_solver.cpp:136] Iteration 500, lr = 0.0992187, m = 0.9
+I0110 18:08:18.401057 30938 solver.cpp:314] Iteration 600 (0.911492 iter/s, 109.71s/100 iter), loss = 1.00983
+I0110 18:08:18.401746 30938 solver.cpp:336]     Train net output #0: loss = 1.00983 (* 1 = 1.00983 loss)
+I0110 18:08:18.401765 30938 sgd_solver.cpp:136] Iteration 600, lr = 0.0990625, m = 0.9
+I0110 18:10:08.947546 30938 solver.cpp:314] Iteration 700 (0.904605 iter/s, 110.546s/100 iter), loss = 1.07907
+I0110 18:10:08.947957 30938 solver.cpp:336]     Train net output #0: loss = 1.07907 (* 1 = 1.07907 loss)
+I0110 18:10:08.947983 30938 sgd_solver.cpp:136] Iteration 700, lr = 0.0989062, m = 0.9
+I0110 18:11:34.730854 30969 data_reader.cpp:305] Starting prefetch of epoch 1
+I0110 18:11:58.819545 30938 solver.cpp:314] Iteration 800 (0.910158 iter/s, 109.871s/100 iter), loss = 0.744435
+I0110 18:11:58.819605 30938 solver.cpp:336]     Train net output #0: loss = 0.744435 (* 1 = 0.744435 loss)
+I0110 18:11:58.819618 30938 sgd_solver.cpp:136] Iteration 800, lr = 0.09875, m = 0.9
+I0110 18:13:48.423988 30938 solver.cpp:314] Iteration 900 (0.91238 iter/s, 109.603s/100 iter), loss = 0.992819
+I0110 18:13:48.424319 30938 solver.cpp:336]     Train net output #0: loss = 0.992819 (* 1 = 0.992819 loss)
+I0110 18:13:48.424331 30938 sgd_solver.cpp:136] Iteration 900, lr = 0.0985937, m = 0.9
+I0110 18:15:36.944845 30938 solver.cpp:559] Iteration 1000, Testing net (#0)
+I0110 18:16:43.724171 30938 solver.cpp:651]     Test net output #0: accuracy/top1 = 0.526
+I0110 18:16:43.724571 30938 solver.cpp:651]     Test net output #1: accuracy/top5 = 0.965101
+I0110 18:16:43.724587 30938 solver.cpp:651]     Test net output #2: loss = 1.24611 (* 1 = 1.24611 loss)
+I0110 18:16:43.724648 30938 solver.cpp:265] Tests completed in 66.7791s
+I0110 18:16:44.814772 30938 solver.cpp:314] Iteration 1000 (0.566928 iter/s, 176.389s/100 iter), loss = 0.817075
+I0110 18:16:44.814823 30938 solver.cpp:336]     Train net output #0: loss = 0.817075 (* 1 = 0.817075 loss)
+I0110 18:16:44.814839 30938 sgd_solver.cpp:136] Iteration 1000, lr = 0.0984375, m = 0.9
+I0110 18:18:34.432390 30938 solver.cpp:314] Iteration 1100 (0.91227 iter/s, 109.617s/100 iter), loss = 0.916842
+I0110 18:18:34.432659 30938 solver.cpp:336]     Train net output #0: loss = 0.916842 (* 1 = 0.916842 loss)
+I0110 18:18:34.432672 30938 sgd_solver.cpp:136] Iteration 1100, lr = 0.0982813, m = 0.9
+I0110 18:20:23.351759 30938 solver.cpp:314] Iteration 1200 (0.918119 iter/s, 108.918s/100 iter), loss = 0.839287
+I0110 18:20:23.352103 30938 solver.cpp:336]     Train net output #0: loss = 0.839287 (* 1 = 0.839287 loss)
+I0110 18:20:23.352114 30938 sgd_solver.cpp:136] Iteration 1200, lr = 0.098125, m = 0.9
+I0110 18:22:12.826596 30938 solver.cpp:314] Iteration 1300 (0.91346 iter/s, 109.474s/100 iter), loss = 0.751047
+I0110 18:22:12.826918 30938 solver.cpp:336]     Train net output #0: loss = 0.751047 (* 1 = 0.751047 loss)
+I0110 18:22:12.826930 30938 sgd_solver.cpp:136] Iteration 1300, lr = 0.0979687, m = 0.9
+I0110 18:24:02.324393 30938 solver.cpp:314] Iteration 1400 (0.913269 iter/s, 109.497s/100 iter), loss = 0.700969
+I0110 18:24:02.324731 30938 solver.cpp:336]     Train net output #0: loss = 0.700969 (* 1 = 0.700969 loss)
+I0110 18:24:02.324743 30938 sgd_solver.cpp:136] Iteration 1400, lr = 0.0978125, m = 0.9
+I0110 18:25:51.719391 30938 solver.cpp:314] Iteration 1500 (0.914128 iter/s, 109.394s/100 iter), loss = 0.505887
+I0110 18:25:51.719722 30938 solver.cpp:336]     Train net output #0: loss = 0.505887 (* 1 = 0.505887 loss)
+I0110 18:25:51.719733 30938 sgd_solver.cpp:136] Iteration 1500, lr = 0.0976562, m = 0.9
+I0110 18:27:41.113248 30938 solver.cpp:314] Iteration 1600 (0.914136 iter/s, 109.393s/100 iter), loss = 0.665867
+I0110 18:27:41.113622 30938 solver.cpp:336]     Train net output #0: loss = 0.665867 (* 1 = 0.665867 loss)
+I0110 18:27:41.113634 30938 sgd_solver.cpp:136] Iteration 1600, lr = 0.0975, m = 0.9
+I0110 18:29:30.227396 30938 solver.cpp:314] Iteration 1700 (0.916479 iter/s, 109.113s/100 iter), loss = 0.689505
+I0110 18:29:30.227741 30938 solver.cpp:336]     Train net output #0: loss = 0.689505 (* 1 = 0.689505 loss)
+I0110 18:29:30.227753 30938 sgd_solver.cpp:136] Iteration 1700, lr = 0.0973438, m = 0.9
+I0110 18:31:18.218428 30938 solver.cpp:314] Iteration 1800 (0.926011 iter/s, 107.99s/100 iter), loss = 0.614017
+I0110 18:31:18.218806 30938 solver.cpp:336]     Train net output #0: loss = 0.614017 (* 1 = 0.614017 loss)
+I0110 18:31:18.218818 30938 sgd_solver.cpp:136] Iteration 1800, lr = 0.0971875, m = 0.9
+I0110 18:33:06.173393 30938 solver.cpp:314] Iteration 1900 (0.92632 iter/s, 107.954s/100 iter), loss = 0.674106
+I0110 18:33:06.173727 30938 solver.cpp:336]     Train net output #0: loss = 0.674106 (* 1 = 0.674106 loss)
+I0110 18:33:06.173739 30938 sgd_solver.cpp:136] Iteration 1900, lr = 0.0970313, m = 0.9
+I0110 18:34:53.255764 30938 solver.cpp:559] Iteration 2000, Testing net (#0)
+I0110 18:35:59.981292 30938 solver.cpp:651]     Test net output #0: accuracy/top1 = 0.7494
+I0110 18:35:59.981618 30938 solver.cpp:651]     Test net output #1: accuracy/top5 = 0.9826
+I0110 18:35:59.981634 30938 solver.cpp:651]     Test net output #2: loss = 0.740998 (* 1 = 0.740998 loss)
+I0110 18:35:59.981698 30938 solver.cpp:265] Tests completed in 66.7253s
+I0110 18:36:01.108559 30938 solver.cpp:314] Iteration 2000 (0.571646 iter/s, 174.934s/100 iter), loss = 0.467169
+I0110 18:36:01.108618 30938 solver.cpp:336]     Train net output #0: loss = 0.467169 (* 1 = 0.467169 loss)
+I0110 18:36:01.108628 30938 sgd_solver.cpp:136] Iteration 2000, lr = 0.096875, m = 0.9
+I0110 18:37:50.516490 30938 solver.cpp:314] Iteration 2100 (0.914019 iter/s, 109.407s/100 iter), loss = 0.684222
+I0110 18:37:50.516816 30938 solver.cpp:336]     Train net output #0: loss = 0.684222 (* 1 = 0.684222 loss)
+I0110 18:37:50.516829 30938 sgd_solver.cpp:136] Iteration 2100, lr = 0.0967188, m = 0.9
+I0110 18:39:39.804042 30938 solver.cpp:314] Iteration 2200 (0.915027 iter/s, 109.286s/100 iter), loss = 0.608023
+I0110 18:39:39.804388 30938 solver.cpp:336]     Train net output #0: loss = 0.608023 (* 1 = 0.608023 loss)
+I0110 18:39:39.804400 30938 sgd_solver.cpp:136] Iteration 2200, lr = 0.0965625, m = 0.9
+I0110 18:41:29.189231 30938 solver.cpp:314] Iteration 2300 (0.914209 iter/s, 109.384s/100 iter), loss = 0.421915
+I0110 18:41:29.189595 30938 solver.cpp:336]     Train net output #0: loss = 0.421915 (* 1 = 0.421915 loss)
+I0110 18:41:29.189607 30938 sgd_solver.cpp:136] Iteration 2300, lr = 0.0964063, m = 0.9
+I0110 18:43:18.120939 30938 solver.cpp:314] Iteration 2400 (0.918014 iter/s, 108.931s/100 iter), loss = 0.476679
+I0110 18:43:18.121227 30938 solver.cpp:336]     Train net output #0: loss = 0.476679 (* 1 = 0.476679 loss)
+I0110 18:43:18.121239 30938 sgd_solver.cpp:136] Iteration 2400, lr = 0.09625, m = 0.9
+I0110 18:45:07.873746 30938 solver.cpp:314] Iteration 2500 (0.911147 iter/s, 109.752s/100 iter), loss = 0.500464
+I0110 18:45:07.874209 30938 solver.cpp:336]     Train net output #0: loss = 0.500464 (* 1 = 0.500464 loss)
+I0110 18:45:07.874233 30938 sgd_solver.cpp:136] Iteration 2500, lr = 0.0960938, m = 0.9
+I0110 18:46:57.615797 30938 solver.cpp:314] Iteration 2600 (0.911236 iter/s, 109.741s/100 iter), loss = 0.64122
+I0110 18:46:57.616091 30938 solver.cpp:336]     Train net output #0: loss = 0.64122 (* 1 = 0.64122 loss)
+I0110 18:46:57.616102 30938 sgd_solver.cpp:136] Iteration 2600, lr = 0.0959375, m = 0.9
