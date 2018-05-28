@@ -1229,6 +1229,7 @@ void Net::ToProto(NetParameter* param, bool write_diff) const {
   }
 }
 
+  //ti-caffe
 template<typename Dtype>
 void Net::Convert2FixedPoint_cpu(Dtype* data, const int cnt, const int bit_width, int fl, bool is_unsigned, bool clip) const {
   for (int index = 0; index < cnt; ++index) {
@@ -1432,6 +1433,7 @@ void Net::InitializeLearnableDiffSpace() {
 }
 #endif
 	
+  // ti-caffe
 template <typename Dtype>
 void Net::OptimizeNet() {
   auto set_blob_data_at = [&](shared_ptr<Blob>& blob, const int n, const int c, const int h, const int w, const Dtype& value) {
